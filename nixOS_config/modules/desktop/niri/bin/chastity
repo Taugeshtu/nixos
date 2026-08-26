@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+niri msg action power-off-monitors
+# swaylock
+gtklock

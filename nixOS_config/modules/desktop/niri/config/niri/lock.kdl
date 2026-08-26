@@ -1,0 +1,5 @@
+spawn-at-startup "swayidle" "-w"
+
+binds {
+    Mod+L hotkey-overlay-title=null { spawn "chastity-img"; }
+}

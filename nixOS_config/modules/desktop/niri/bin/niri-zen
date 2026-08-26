@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+niri msg action center-window
+
+// so here we need to look into `~.config/niri/gaps.kdl`
+// parse the state from the first line: `//zen:0` vs `//zen:1`
+// flip 0-1
+// and then... edit gaps, edit structs top/bottom so our window isn't fucked up..
+// unfortunately, it does fuck over the stacked windows :/
+
+niri msg action load-config-file

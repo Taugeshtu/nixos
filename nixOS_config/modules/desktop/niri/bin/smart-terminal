@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+NIRI_INFO=$(niri msg focused-window | tr '[:upper:]' '[:lower:]')
+APP_ID=$(echo "$NIRI_INFO" | grep "app id:" | awk '{gsub(/"/, ""); print $3}')
+
+# for special apps, sends the "F11"
+# but due to weirdness of handling CMD key,
+# the apps will see Cmd+F11.
+if [ "$APP_ID" = "thunar" ]; then
+    ydotool key 87:1 87:0
+else
+    exec foot
+fi

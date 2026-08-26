@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Custom protocol handler to open file paths directly in lite-xl
+# Scheme: lite-open:///absolute/path/to/file
+
+RAW_URL="$1"
+
+# Extract path and decode URL characters (handles spaces, Cyrillic, etc.)
+FILE_PATH=$(python3 -c "import sys, urllib.parse; print(urllib.parse.unquote(sys.argv[1].replace('lite-open://', '')))" "$RAW_URL")
+
+# Launch lite-xl on the absolute file path
+lite-xl "$FILE_PATH"

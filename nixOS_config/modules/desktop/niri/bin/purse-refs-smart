@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+
+# If current.sock has active file (we have definitions)
+if [ -S "$XDG_RUNTIME_DIR/current.sock" ] && \
+     CONTEXT=$(echo '{"type": "Query"}' | nc -w 1 -U "$XDG_RUNTIME_DIR/current.sock" 2>/dev/null) && \
+     FILE=$(echo "$CONTEXT" | jq -r '.attention.file' 2>/dev/null) && \
+     [ -n "$FILE" ] && [ "$FILE" != "null" ]; then
+    # Otherwise, launch gluek-up in definitions mode
+    /home/tau/.local/bin/purse-refs.sh &
+else
+    # Fall through to active application
+    NIRI_INFO=$(niri msg focused-window 2>/dev/null | tr '[:upper:]' '[:lower:]')
+    APP_ID=$(echo "$NIRI_INFO" | grep "app id:" | awk '{gsub(/"/, ""); print $3}')
+
+    if [ "$APP_ID" = "thunar" ]; then
+        ydotool key 67:1 67:0
+    elif xdotool getactivewindow >/dev/null 2>&1; then
+        xdotool key --clearmodifiers alt+Return
+    else
+        # If native Wayland, use wtype (bypasses Niri)
+        wtype -M alt -k return -m alt
+    fi
+fi
+

@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -lt 1 ]; then
+    echo "Usage: $(basename "$0") <input_file> [target_mb] [output_file]"
+    exit 1
+fi
+
+INPUT="$1"
+TARGET_MB="${2:-10}"
+OUTPUT="${3:-}"
+
+if [ ! -f "$INPUT" ]; then
+    echo "Error: Input file '$INPUT' does not exist." >&2
+    exit 1
+fi
+
+dir=$(dirname "$INPUT")
+base=$(basename "$INPUT")
+stem="${base%.*}"
+ext="${base##*.}"
+
+if [ -z "$OUTPUT" ]; then
+    if [ "${ext,,}" = "gif" ]; then
+        OUTPUT="$dir/${stem}.mp4"
+    else
+        OUTPUT="$dir/${stem}_shrink.mp4"
+    fi
+fi
+
+if [ "$OUTPUT" = "$INPUT" ]; then
+    echo "Error: Output path cannot be the same as input path." >&2
+    exit 1
+fi
+
+# Calculate target bytes (5% headroom for container overhead)
+TARGET_BYTES=$(awk "BEGIN {print int($TARGET_MB * 1024 * 1024 * 0.95)}")
+
+# Probe duration in seconds
+DURATION=$(ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$INPUT" 2>/dev/null || true)
+if [ -z "$DURATION" ] || [ "$(awk "BEGIN {print ($DURATION <= 0)}")" -eq 1 ]; then
+    DURATION=1
+fi
+
+# Check for audio stream
+AUDIO_CODEC=$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$INPUT" 2>/dev/null || true)
+
+TOTAL_BITRATE=$(awk "BEGIN {print int(($TARGET_BYTES * 8) / $DURATION)}")
+
+if [ -n "$AUDIO_CODEC" ]; then
+    if [ "$TOTAL_BITRATE" -le 250000 ]; then
+        AUDIO_BITRATE=64000
+    else
+        AUDIO_BITRATE=128000
+    fi
+    AUDIO_OPTS=(-c:a aac -b:a "$AUDIO_BITRATE")
+    VIDEO_BITRATE=$((TOTAL_BITRATE - AUDIO_BITRATE))
+else
+    AUDIO_OPTS=(-an)
+    VIDEO_BITRATE=$TOTAL_BITRATE
+fi
+
+if [ "$VIDEO_BITRATE" -lt 50000 ]; then
+    VIDEO_BITRATE=50000
+fi
+
+# Probe resolution
+DIMS=$(ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 "$INPUT" 2>/dev/null || true)
+WIDTH=$(echo "$DIMS" | cut -d'x' -f1)
+HEIGHT=$(echo "$DIMS" | cut -d'x' -f2)
+
+# Determine short side limit based on video bitrate
+MAX_SHORT=0
+if [ "$VIDEO_BITRATE" -lt 350000 ]; then
+    MAX_SHORT=360
+elif [ "$VIDEO_BITRATE" -lt 750000 ]; then
+    MAX_SHORT=480
+elif [ "$VIDEO_BITRATE" -lt 1500000 ]; then
+    MAX_SHORT=720
+fi
+
+SCALE_VF="scale=trunc(iw/2)*2:trunc(ih/2)*2"
+if [ "$MAX_SHORT" -gt 0 ] && [ -n "$WIDTH" ] && [ -n "$HEIGHT" ]; then
+    if [ "$WIDTH" -le "$HEIGHT" ]; then
+        if [ "$WIDTH" -gt "$MAX_SHORT" ]; then
+            SCALE_VF="scale=${MAX_SHORT}:-2"
+        fi
+    else
+        if [ "$HEIGHT" -gt "$MAX_SHORT" ]; then
+            SCALE_VF="scale=-2:${MAX_SHORT}"
+        fi
+    fi
+fi
+
+echo "Input: $INPUT (${WIDTH:-?}x${HEIGHT:-?}, duration: ${DURATION}s, audio: ${AUDIO_CODEC:-none})"
+echo "Target: ${TARGET_MB}MB | Video bitrate: $((VIDEO_BITRATE / 1000)) kbps | Filter: $SCALE_VF"
+echo "Output: $OUTPUT"
+
+PASSLOG="/tmp/video_shrink_${RANDOM}_$$"
+
+cleanup() {
+    rm -f "${PASSLOG}"*
+}
+trap cleanup EXIT
+
+echo "Pass 1/2..."
+ffmpeg -y -nostdin -loglevel error -stats -i "$INPUT" \
+    -pix_fmt yuv420p \
+    -vf "$SCALE_VF" \
+    -c:v libx264 \
+    -b:v "$VIDEO_BITRATE" \
+    -pass 1 \
+    -passlogfile "$PASSLOG" \
+    -an \
+    -f null /dev/null
+
+echo "Pass 2/2..."
+ffmpeg -y -nostdin -loglevel error -stats -i "$INPUT" \
+    -movflags +faststart \
+    -pix_fmt yuv420p \
+    -vf "$SCALE_VF" \
+    -c:v libx264 \
+    -b:v "$VIDEO_BITRATE" \
+    -pass 2 \
+    -passlogfile "$PASSLOG" \
+    "${AUDIO_OPTS[@]}" \
+    "$OUTPUT"
+
+FINAL_SIZE=$(stat -c%s "$OUTPUT")
+echo "Done! Output: $OUTPUT ($((FINAL_SIZE / 1024)) KB)"

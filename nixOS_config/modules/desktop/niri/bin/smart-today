@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+NIRI_INFO=$(niri msg focused-window | tr '[:upper:]' '[:lower:]')
+APP_ID=$(echo "$NIRI_INFO" | grep "app id:" | awk '{gsub(/"/, ""); print $3}')
+
+if [ "$APP_ID" = "thunar" ]; then
+    # F12 (keycode 88) — triggers the "TO-DAY here" custom action in Thunar,
+    # which passes the current directory to `to-day` as an argument.
+    ydotool key 88:1 88:0
+else
+    to-day &
+fi

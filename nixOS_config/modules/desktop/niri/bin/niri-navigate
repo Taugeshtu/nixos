@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# niri-navigate <up|down>
+# In a stacked multi-window column: moves focus within the column.
+# In a tabbed column or single-window column: switches workspace.
+
+set -euo pipefail
+
+dir="${1:-}"
+if [[ "$dir" != "up" && "$dir" != "down" ]]; then
+    echo "Usage: niri-navigate <up|down>" >&2
+    exit 1
+fi
+
+focused=$(niri msg -j focused-window)
+if [[ "$focused" == "null" || -z "$focused" ]]; then
+    echo "niri-navigate: no focused window" >&2
+    exit 1
+fi
+
+tile_h=$(echo "$focused" | jq '.layout.tile_size[1]')
+logical_h=$(niri msg -j focused-output | jq '.logical.height')
+
+# If the tile fills the full output height, the column is either tabbed or
+# a single window — either way, workspace navigation is correct.
+if (( $(echo "$tile_h >= $logical_h" | bc -l) )); then
+    niri msg action "focus-workspace-$dir"
+else
+    niri msg action "focus-window-or-workspace-$dir"
+fi

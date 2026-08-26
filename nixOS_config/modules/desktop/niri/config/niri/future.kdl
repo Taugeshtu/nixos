@@ -1,0 +1,22 @@
+spawn-at-startup "libinput-gestures"
+
+binds {
+    Alt+N hotkey-overlay-title="[TO-DAY]" { spawn "smart-today"; }
+    Alt+Return hotkey-overlay-title="[References]" { spawn "purse-refs-smart"; }
+    Ctrl+Return hotkey-overlay-title="[Definitions]" { spawn "purse-defs-smart"; }
+}
+
+window-rule {
+    match app-id="purse"
+    shadow {
+        draw-behind-window false
+        spread 0
+    }
+    border {
+        on
+        width 10
+        active-color "#f009"
+        inactive-color "#87ceeb"
+        urgent-color "#ffc87f"
+    }
+}

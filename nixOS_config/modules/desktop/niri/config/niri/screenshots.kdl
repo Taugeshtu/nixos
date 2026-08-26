@@ -1,0 +1,14 @@
+// You can change the path where screenshots are saved.
+// A ~ at the front will be expanded to the home directory.
+// The path is formatted with strftime(3) to give you the screenshot date and time.
+screenshot-path "~/20_ScreenGrabs/Screen_%Y%m%d_%H%M.png"
+
+// You can also set this to null to disable saving screenshots to disk.
+// screenshot-path null
+
+binds {
+    // Print hotkey-overlay-title="[Screenshot]" { screenshot; }
+    Print hotkey-overlay-title="[Screenshot]" { screenshot; }
+    Ctrl+Print hotkey-overlay-title="[Whole-Screenshot]" { screenshot-screen; }
+    Alt+Print hotkey-overlay-title="[Window-shot]" { screenshot-window; }
+}

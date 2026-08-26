@@ -1,0 +1,15 @@
+# TouchEdgeGlide Configuration
+
+# OPTION A: Simple (Applied to all edges)
+[generic]
+speed = 5.0
+zone_size = 0.15      # Starts gliding when within 15% of any edge
+full_speed_at = 0.05  # Reaches max speed when within 5% of any edge
+
+# OPTION B: Advanced (Overrides generic if present)
+# If you use this section, [generic] is ignored.
+# [edges]
+# left   = { speed = 5.0, zone_size = 0.15, full_speed_at = 0.05 }
+# right  = { speed = 5.0, zone_size = 0.15, full_speed_at = 0.05 }
+# top    = { speed = 5.0, zone_size = 0.15, full_speed_at = 0.05 }
+# bottom = { speed = 5.0, zone_size = 0.15, full_speed_at = 0.05 }

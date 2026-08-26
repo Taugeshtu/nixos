@@ -1,0 +1,57 @@
+#!/usr/bin/env python3
+import sys
+import json
+import subprocess
+
+def is_gtklock_running():
+    try:
+        subprocess.check_call(["pgrep", "-x", "gtklock"])
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+def should_inhibit():
+    try:
+        pactl_out = subprocess.check_output(["pactl", "list", "sink-inputs"], text=True)
+        if "Corked: no" not in pactl_out:
+            return False
+    except Exception:
+        return False
+    try:
+        win = json.loads(subprocess.check_output(["niri", "msg", "--json", "focused-window"], text=True))
+    except Exception:
+        return False
+    app_id = win.get("app_id", "").lower()
+    allowed_apps = ["waterfox", "firefox", "chrome", "chromium", "brave", "zen", "mpv", "librewolf"]
+    if not any(app in app_id for app in allowed_apps):
+        return False
+    layout = win.get("layout", {})
+    if layout.get("window_offset_in_tile", [10.0, 10.0]) != [0.0, 0.0]:
+        return False
+    try:
+        out = json.loads(subprocess.check_output(["niri", "msg", "--json", "focused-output"], text=True))
+        logical = out.get("logical", {})
+        win_size = layout.get("window_size", [0, 0])
+        if abs(win_size[0] - logical.get("width", 0)) <= 2 and abs(win_size[1] - logical.get("height", 0)) <= 2:
+            return True
+    except Exception:
+        pass
+    return False
+
+# 1. If gtklock is already running, just turn off monitors and exit
+if is_gtklock_running():
+    try:
+        subprocess.run(["niri", "msg", "action", "power-off-monitors"])
+    except Exception:
+        pass
+    sys.exit(0)
+
+# 2. Check if we should inhibit locking
+if should_inhibit():
+    sys.exit(0)
+
+# 3. Otherwise, spawn chastity-img in background and exit immediately
+try:
+    subprocess.Popen(["chastity-img"])
+except Exception:
+    sys.exit(1)

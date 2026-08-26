@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$#" -eq 0 ]; then
+    echo "Usage: $0 <video_file_1> [video_file_2 ...]"
+    exit 1
+fi
+
+for file in "$@"; do
+    if [ ! -f "$file" ]; then
+        echo "Skip non-file: $file"
+        continue
+    fi
+
+    codec=$(ffprobe -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$file" 2>/dev/null || true)
+    if [ -z "$codec" ]; then
+        echo "No audio stream found in: $file (skipped)"
+        continue
+    fi
+
+    case "$codec" in
+        aac|alac) ext="m4a" ;;
+        opus)     ext="opus" ;;
+        vorbis)   ext="ogg" ;;
+        mp3)      ext="mp3" ;;
+        flac)     ext="flac" ;;
+        pcm_*)    ext="wav" ;;
+        ac3)      ext="ac3" ;;
+        eac3)     ext="eac3" ;;
+        dts)      ext="dts" ;;
+        *)        ext="mka" ;;
+    esac
+
+    dir=$(dirname "$file")
+    base=$(basename "$file")
+    stem="${base%.*}"
+    out="$dir/${stem}.${ext}"
+
+    if [ "$out" = "$file" ]; then
+        echo "Target is same as source ($out), skip"
+        continue
+    fi
+
+    echo "Extracting audio ($codec) -> $out"
+    if ffmpeg -nostdin -v error -stats -y -i "$file" -vn -c:a copy "$out"; then
+        if [ -f "$out" ] && [ -s "$out" ]; then
+            rm -f "$file"
+            echo "Nuked original: $file"
+        else
+            echo "Output missing or empty, kept original: $file"
+        fi
+    else
+        echo "Extraction failed for $file, kept original"
+    fi
+done

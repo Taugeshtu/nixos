@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+import sys, os, math, colorsys
+from PIL import Image
+import numpy as np
+
+PRESETS = ["#fb007a", "#ff0000", "#f3e430", "#5fd7af", "#20bbfc", "#ff00ff"]
+VALUE_THRESHOLD = 0.15
+SATURATION_THRESHOLD = 0.15
+GRAY_SHADES_COUNT = 4
+
+def coerce_image(path, h_size, w_size, out_path=None):
+    if path == '-':
+        orig_img = Image.open(sys.stdin.buffer)
+        img = orig_img.convert('RGB')
+    else:
+        orig_img = Image.open(path)
+        img = orig_img.convert('RGB')
+    img_arr = np.array(img)
+    H, W, C = img_arr.shape
+    
+    pad_h = (h_size - H % h_size) % h_size
+    pad_w = (w_size - W % w_size) % w_size
+    if pad_h > 0 or pad_w > 0:
+        img_arr = np.pad(img_arr, ((0, pad_h), (0, pad_w), (0, 0)), mode='edge')
+        
+    H_pad, W_pad, _ = img_arr.shape
+    Bh, Bw = H_pad // h_size, W_pad // w_size
+    blocks = img_arr.reshape(Bh, h_size, Bw, w_size, 3)
+    blocks = blocks.transpose(0, 2, 1, 3, 4).reshape(Bh, Bw, h_size * w_size, 3)
+    N = h_size * w_size
+    
+    any_black_in_block = np.any((blocks[..., 0] == 0) & (blocks[..., 1] == 0) & (blocks[..., 2] == 0), axis=-1)
+    
+    rgb = blocks.astype(np.float32) / 255.0
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    
+    v = np.maximum(np.maximum(r, g), b)
+    min_val = np.minimum(np.minimum(r, g), b)
+    delta = v - min_val
+    
+    s = np.zeros_like(v)
+    v_pos = v > 0
+    s[v_pos] = delta[v_pos] / v[v_pos]
+    
+    h = np.zeros_like(v)
+    delta_pos = delta > 0
+    is_r = (v == r) & delta_pos
+    is_g = (v == g) & delta_pos
+    is_b = (v == b) & delta_pos
+    
+    h[is_r] = ((g[is_r] - b[is_r]) / delta[is_r]) % 6.0
+    h[is_g] = ((b[is_g] - r[is_g]) / delta[is_g]) + 2.0
+    h[is_b] = ((r[is_b] - g[is_b]) / delta[is_b]) + 4.0
+    h /= 6.0
+    
+    avg_v = np.mean(v, axis=-1)
+    avg_s = np.mean(s, axis=-1)
+    
+    w = s * v
+    sum_w = np.sum(w, axis=-1)
+    sum_w_pos = sum_w > 0
+    
+    angle = (2.0 * np.pi) * h
+    xs = np.sum(w * np.cos(angle), axis=-1)
+    ys = np.sum(w * np.sin(angle), axis=-1)
+    ch = np.arctan2(ys, xs) / (2.0 * np.pi) % 1.0
+    
+    ch_expanded = ch[..., np.newaxis]
+    diff = np.abs(h - ch_expanded)
+    dist = np.minimum(diff, 1.0 - diff)
+    pen = np.sum(w * dist, axis=-1)
+    
+    rgbs = [tuple(int(c.lstrip('#')[i:i+2], 16) for i in (0, 2, 4)) for c in PRESETS]
+    hues = [colorsys.rgb_to_hsv(r/255, g/255, b/255)[0] for r, g, b in rgbs]
+    
+    out_colors = np.zeros((Bh, Bw, 3), dtype=np.uint8)
+    
+    is_black_block = any_black_in_block | (avg_v < VALUE_THRESHOLD)
+    is_gray_block = (~is_black_block) & (avg_s < SATURATION_THRESHOLD)
+    is_color_candidate = (~is_black_block) & (~is_gray_block)
+    
+    if np.any(is_gray_block):
+        shade_idx = np.round(avg_v[is_gray_block] * (GRAY_SHADES_COUNT - 1))
+        gray_val = np.round(shade_idx * 255.0 / (GRAY_SHADES_COUNT - 1)).astype(np.uint8)
+        out_colors[is_gray_block] = np.stack([gray_val, gray_val, gray_val], axis=-1)
+        
+    is_white_block = avg_v > 0.8
+    valid_mask = is_color_candidate & (~is_white_block) & sum_w_pos & (pen <= N * 0.3)
+    
+    if np.any(valid_mask):
+        ch_valid = ch[valid_mask]
+        hues_arr = np.array(hues, dtype=np.float32)
+        diff_preset = np.abs(ch_valid[:, np.newaxis] - hues_arr)
+        dist_preset = np.minimum(diff_preset, 1.0 - diff_preset)
+        closest_idx = np.argmin(dist_preset, axis=-1)
+        rgbs_arr = np.array(rgbs, dtype=np.uint8)
+        out_colors[valid_mask] = rgbs_arr[closest_idx]
+        
+    white_mask = is_color_candidate & is_white_block
+    out_colors[white_mask] = [255, 255, 255]
+    
+    g = math.gcd(h_size, w_size)
+    h_out = h_size // g
+    w_out = w_size // g
+    
+    out_blocks = np.broadcast_to(out_colors[:, np.newaxis, :, np.newaxis, :], (Bh, h_out, Bw, w_out, 3))
+    out_img_arr = out_blocks.transpose(0, 1, 2, 3, 4).reshape(Bh * h_out, Bw * w_out, 3)
+    
+    H_out = math.ceil(H / g)
+    W_out = math.ceil(W / g)
+    out_img_arr = out_img_arr[:H_out, :W_out]
+    
+    out = Image.fromarray(out_img_arr)
+    if out_path:
+        if out_path == '-':
+            out.save(sys.stdout.buffer, format='PNG')
+        else:
+            out.save(out_path)
+    else:
+        if path == '-':
+            out.save(sys.stdout.buffer, format='PNG')
+        else:
+            base, ext = os.path.splitext(path)
+            out.save(f"{base}_crcd.png")
+
+if __name__ == '__main__':
+    h_val, w_val = 16, 8
+    args = sys.argv[1:]
+    if '-b' in args:
+        idx = args.index('-b')
+        h_str, w_str = args[idx+1].split('x')
+        h_val, w_val = int(h_str), int(w_str)
+        del args[idx:idx+2]
+        
+    if not args and not sys.stdin.isatty():
+        input_path = '-'
+        output_path = None
+    elif not args:
+        print("Usage: img-coercer <image_path> [output_path] [-b HEIGHTxWIDTH]")
+        sys.exit(1)
+    else:
+        input_path = args[0]
+        output_path = args[1] if len(args) > 1 else None
+        
+    coerce_image(input_path, h_val, w_val, output_path)

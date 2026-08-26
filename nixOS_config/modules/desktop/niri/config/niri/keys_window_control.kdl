@@ -1,0 +1,32 @@
+binds {
+    // window sizing:
+    Mod+R hotkey-overlay-title="resize 33 / 50 / 66 / 100%" { switch-preset-column-width; }
+    // Cycling through the presets in reverse order is also possible.
+    // Mod+R { switch-preset-column-width-back; }
+    // Mod+Shift+R { switch-preset-window-height; }
+    // Mod+Ctrl+R { reset-window-height; }
+    Mod+F hotkey-overlay-title="F U L L S C R E E N" { fullscreen-window; }
+    
+    // This command can also:
+    // * set width in pixels: "1000"
+    // * adjust width in pixels: "-5" or "+5"
+    // * set width as a percentage of screen width: "25%"
+    // * adjust width as a percentage of screen width: "-10%" or "+10%"
+    // Pixel sizes use logical, or scaled, pixels. I.e. on an output with scale 2.0,
+    // set-column-width "100" will make the column occupy 200 physical screen pixels.
+    Mod+Alt+Left { set-column-width "-10%"; }
+    Mod+Alt+Right { set-column-width "+10%"; }
+
+    // Finer height adjustments when in column with other windows.
+    Mod+Alt+Down { set-window-height "-10%"; }
+    Mod+Alt+Up { set-window-height "+10%"; }
+
+    Mod+TouchpadScrollDown { set-window-height "-2%"; }
+    Mod+TouchpadScrollUp { set-window-height "+2%"; }
+    Mod+TouchpadScrollLeft { set-column-width "+2%"; }
+    Mod+TouchpadScrollRight { set-column-width "-2%"; }
+
+    // Move the focused window between the floating and the tiling layout.
+    Mod+V hotkey-overlay-title="focus on float / grid" { switch-focus-between-floating-and-tiling; }
+    Mod+Shift+V hotkey-overlay-title="float / grid"       { toggle-window-floating; }
+}

@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+import argparse
+import fnmatch
+import hashlib
+import os
+
+MAX_HASH_BYTES = 50 * 1024 * 1024  # 50 MB prefix for fast comparison
+
+def get_hash(path, max_bytes=MAX_HASH_BYTES):
+    h = hashlib.sha256()
+    bytes_read = 0
+    try:
+        with open(path, 'rb') as f:
+            while bytes_read < max_bytes:
+                to_read = min(65536, max_bytes - bytes_read)
+                chunk = f.read(to_read)
+                if not chunk:
+                    break
+                h.update(chunk)
+                bytes_read += len(chunk)
+        return h.hexdigest()
+    except Exception as e:
+        print(f"Error hashing {path}: {e}")
+        return None
+
+def is_text_file(path, max_check=8192):
+    try:
+        with open(path, "rb") as f:
+            chunk = f.read(max_check)
+            return b"\x00" not in chunk
+    except Exception:
+        return False
+
+def text_contents_match(path1, path2, max_size=MAX_HASH_BYTES):
+    try:
+        s1 = os.path.getsize(path1)
+        s2 = os.path.getsize(path2)
+        if s1 > max_size or s2 > max_size:
+            return False
+        if not is_text_file(path1) or not is_text_file(path2):
+            return False
+        with open(path1, "rb") as f1, open(path2, "rb") as f2:
+            t1 = f1.read().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            t2 = f2.read().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            return t1 == t2
+    except Exception:
+        return False
+
+def main():
+    parser = argparse.ArgumentParser(description="Find and delete duplicate files in leftovers_dir that already exist in source_dir, and auto-scrub empty folders.")
+    parser.add_argument("source_dir", help="Source directory containing master/reference files to keep")
+    parser.add_argument("leftovers_dir", help="Candidate directory to clean; files duplicated in source_dir are deleted, leaving only unique leftovers")
+    parser.add_argument("pattern", nargs="?", default="*", help="Optional filename wildcard pattern (e.g. '*.jpg', '2026*', '*'). Default: '*'")
+    args = parser.parse_args()
+
+    source_dir = args.source_dir
+    leftovers_dir = args.leftovers_dir
+    pattern = args.pattern
+
+    source_files = {}  # name -> list of (path, size)
+    source_hashes = {} # path -> hash
+    
+    print(f"Scanning source dir ({source_dir})...")
+    for root, _, files in os.walk(source_dir):
+        for name in files:
+            if not fnmatch.fnmatch(name, pattern):
+                continue
+            path = os.path.join(root, name)
+            try:
+                size = os.path.getsize(path)
+                source_files.setdefault(name, []).append((path, size))
+            except Exception as e:
+                print(f"Error reading source file {path}: {e}")
+                
+    deleted_count = 0
+    freed_bytes = 0
+    
+    print(f"Checking leftovers dir ({leftovers_dir})...")
+    for root, _, files in os.walk(leftovers_dir):
+        for name in files:
+            if not fnmatch.fnmatch(name, pattern):
+                continue
+            leftovers_path = os.path.join(root, name)
+            try:
+                leftovers_size = os.path.getsize(leftovers_path)
+            except Exception as e:
+                continue
+            
+            candidates = source_files.get(name)
+            if not candidates:
+                continue
+            
+            # 1. Exact size match -> SHA-256 hash check
+            deleted = False
+            leftovers_hash = None
+            for source_path, source_size in candidates:
+                if source_size == leftovers_size:
+                    if not leftovers_hash:
+                        leftovers_hash = get_hash(leftovers_path)
+                    if not leftovers_hash:
+                        break
+                    if source_path not in source_hashes:
+                        source_hashes[source_path] = get_hash(source_path)
+                    
+                    if leftovers_hash == source_hashes[source_path]:
+                        try:
+                            os.remove(leftovers_path)
+                            print(f"Deleted: {leftovers_path} (matches {source_path})")
+                            deleted_count += 1
+                            freed_bytes += leftovers_size
+                            deleted = True
+                            break
+                        except Exception as e:
+                            print(f"Failed to delete {leftovers_path}: {e}")
+            
+            if deleted:
+                continue
+
+            # 2. Different size -> check normalized text contents (ignore CRLF vs LF)
+            for source_path, source_size in candidates:
+                if text_contents_match(leftovers_path, source_path):
+                    try:
+                        os.remove(leftovers_path)
+                        print(f"Deleted (text match): {leftovers_path} (matches {source_path})")
+                        deleted_count += 1
+                        freed_bytes += leftovers_size
+                        break
+                    except Exception as e:
+                        print(f"Failed to delete {leftovers_path}: {e}")
+                        
+    # 3. Auto-scrub empty folders bottom-up
+    cleaned_dirs = 0
+    for root, dirs, files in os.walk(leftovers_dir, topdown=False):
+        if os.path.abspath(root) == os.path.abspath(leftovers_dir):
+            continue
+        if not os.listdir(root):
+            try:
+                os.rmdir(root)
+                cleaned_dirs += 1
+            except Exception as e:
+                print(f"Failed to remove empty dir {root}: {e}")
+
+    print(f"\nDone! Deleted {deleted_count} files. Freed {freed_bytes / (1024*1024):.2f} MB. Removed {cleaned_dirs} empty directories.")
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,160 @@
+// This config is in the KDL format: https://kdl.dev
+// "/-" comments out the following node.
+// Check the wiki for a full description of the configuration:
+// https://yalter.github.io/niri/Configuration:-Introduction
+
+// https://niri-wm.github.io/niri/Configuration%3A-Named-Workspaces.html
+// workspace "idle"
+// workspace "work"
+
+// Input device configuration.
+// Find the full list of options on the wiki:
+// https://yalter.github.io/niri/Configuration:-Input
+input {
+    keyboard {
+        xkb {
+            // You can set rules, model, layout, variant and options.
+            // For more information, see xkeyboard-config(7).
+
+            // For example:
+            // layout "us,ua"
+            // options "grp:win_space_toggle,compose:ralt,ctrl:nocaps"
+
+            // If this section is empty, niri will fetch xkb settings
+            // from org.freedesktop.locale1. You can control these using
+            // localectl set-x11-keymap.
+        }
+
+        // Enable numlock on startup, omitting this setting disables it.
+        numlock
+        track-layout "window"
+        repeat-delay 200
+        repeat-rate 35
+    }
+
+    // Next sections include libinput settings.
+    // Omitting settings disables them, or leaves them at their default values.
+    // All commented-out settings here are examples, not defaults.
+    touchpad {
+        // off
+        tap
+        dwt
+        // dwtp
+        // drag false
+        // drag-lock
+        natural-scroll
+        // accel-speed 0.2
+        // accel-profile "flat"
+        // scroll-method "two-finger"
+        // disabled-on-external-mouse
+
+        accel-profile "adaptive"
+        scroll-factor horizontal=1.5 vertical=0.8
+    }
+
+    mouse {
+        // off
+        // natural-scroll
+        accel-speed -0.25
+        // accel-profile "flat"
+        // scroll-method "no-scroll"
+    }
+
+    trackpoint {
+        // off
+        // natural-scroll
+        // accel-speed 0.2
+        // accel-profile "flat"
+        // scroll-method "on-button-down"
+        // scroll-button 273
+        // scroll-button-lock
+        // middle-emulation
+    }
+
+    // Uncomment this to make the mouse warp to the center of newly focused windows.
+    // warp-mouse-to-focus
+
+    // Focus windows and outputs automatically when moving the mouse into them.
+    // Setting max-scroll-amount="0%" makes it work only on windows already fully on screen.
+    // focus-follows-mouse max-scroll-amount="0%"
+}
+
+// You can configure outputs by their name, which you can find
+// by running `niri msg outputs` while inside a niri instance.
+// The built-in laptop monitor is usually called "eDP-1".
+// Find more information on the wiki:
+// https://yalter.github.io/niri/Configuration:-Outputs
+// Remember to uncomment the node by removing "/-"!
+output "eDP-1" {
+    // Uncomment this line to disable this output.
+    // off
+
+    // Resolution and, optionally, refresh rate of the output.
+    // The format is "<width>x<height>" or "<width>x<height>@<refresh rate>".
+    // If the refresh rate is omitted, niri will pick the highest refresh rate
+    // for the resolution.
+    // If the mode is omitted altogether or is invalid, niri will pick one automatically.
+    // Run `niri msg outputs` while inside a niri instance to list all outputs and their modes.
+    // mode "1920x1080@120.030"
+
+    // You can use integer or fractional scale, for example use 1.5 for 150% scale.
+    scale 1.5
+
+    // Transform allows to rotate the output counter-clockwise, valid values are:
+    // normal, 90, 180, 270, flipped, flipped-90, flipped-180 and flipped-270.
+    transform "normal"
+
+    // Position of the output in the global coordinate space.
+    // This affects directional monitor actions like "focus-monitor-left", and cursor movement.
+    // The cursor can only move between directly adjacent outputs.
+    // Output scale and rotation has to be taken into account for positioning:
+    // outputs are sized in logical, or scaled, pixels.
+    // For example, a 3840×2160 output with scale 2.0 will have a logical size of 1920×1080,
+    // so to put another output directly adjacent to it on the right, set its x to 1920.
+    // If the position is unset or results in an overlap, the output is instead placed
+    // automatically.
+    position x=1280 y=0
+
+    backdrop-color "#220000"
+}
+
+include "layout.kdl"
+include "layers.kdl"
+
+include "startup.kdl"
+include "animations.kdl"
+include "window_rules.kdl"
+include "screenshots.kdl"
+include "gestures.kdl"
+include "lock.kdl"
+include "future.kdl"
+
+
+// Keys:
+// "Mod" is a special modifier equal to Super when running on a TTY, and to Alt when running as a winit window.
+// Most actions that you can bind here can also be invoked programmatically with `niri msg action do-something`.
+include "keys_media.kdl"
+include "keys_orchestration.kdl"
+include "keys_window_control.kdl"
+include "alt_tabs.kdl"
+include "keys_cleanup.kdl"
+include "keys_unused.kdl"
+binds {
+    // Applications such as remote-desktop clients and software KVM switches may
+    // request that niri stops processing the keyboard shortcuts defined here
+    // so they may, for example, forward the key presses as-is to a remote machine.
+    // It's a good idea to bind an escape hatch to toggle the inhibitor,
+    // so a buggy application can't hold your session hostage.
+    //
+    // The allow-inhibiting=false property can be applied to other binds as well,
+    // which ensures niri always processes them, even when an inhibitor is active.
+    Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
+}
+
+cursor {
+    xcursor-theme "RedOmen"
+}
+
+ environment {
+    QT_QPA_PLATFORMTHEME "qt5ct"
+}

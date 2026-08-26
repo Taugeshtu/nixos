@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+<action>
+	<icon>utilities-terminal</icon>
+	<name>Open Terminal Here</name>
+	<submenu></submenu>
+	<unique-id>1771559553376235-1</unique-id>
+	<command>foot-on-path %f</command>
+	<description>Terminal Here</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>Folder_basket</icon>
+	<name>&gt; _Ingress</name>
+	<submenu></submenu>
+	<unique-id>1772973136174624-1</unique-id>
+	<command>to-ingress %F</command>
+	<description>Sends selected items to Catch-all</description>
+	<range>*</range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>Archive</icon>
+	<name>_Zip-Zero</name>
+	<submenu></submenu>
+	<unique-id>1772900563158007-1</unique-id>
+	<command>bash -c &apos;cd &quot;$(dirname &quot;%f&quot;)&quot; &amp;&amp; zip -0 -r &quot;%n.zip&quot; &quot;%n&quot;&apos;</command>
+	<description>Package files/folders into .zip</description>
+	<range>*</range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>Folder_basket</icon>
+	<name>&gt; _Ingress (everything)</name>
+	<submenu></submenu>
+	<unique-id>1773183430906955-1</unique-id>
+	<command>to-ingress %D</command>
+	<description>Sends CURRENTLY OPENED FOLDER to Catch-all</description>
+	<range>*</range>
+	<patterns>*</patterns>
+	<directories/>
+</action>
+<action>
+	<icon>text-editor</icon>
+	<name>TO-DAY here</name>
+	<submenu></submenu>
+	<unique-id>1774500000000001-1</unique-id>
+	<command>to-day %f</command>
+	<description>Open TO-DAY jotter for this directory</description>
+	<range></range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+	<audio-files/>
+	<image-files/>
+	<other-files/>
+	<text-files/>
+	<video-files/>
+</action>
+<action>
+	<icon>audio-x-generic</icon>
+	<name>Strip to Audio</name>
+	<submenu></submenu>
+	<unique-id>1775700000000001-1</unique-id>
+	<command>strip_to_audio %F</command>
+	<description>Extract original audio track and delete video file</description>
+	<range>*</range>
+	<patterns>*</patterns>
+	<video-files/>
+</action>
+<action>
+	<icon>video-x-generic</icon>
+	<name>Shrink Video (&lt;10MB)</name>
+	<submenu></submenu>
+	<unique-id>1775800000000001-1</unique-id>
+	<command>video_shrink %f</command>
+	<description>Compress video or GIF to under 10MB</description>
+	<range>*</range>
+	<patterns>*</patterns>
+	<image-files/>
+	<video-files/>
+</action>
+</actions>

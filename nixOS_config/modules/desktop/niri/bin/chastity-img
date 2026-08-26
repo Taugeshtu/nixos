@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+TEMP_CRCD="/tmp/chastity-screen_crcd.bmp"
+
+niri msg action power-off-monitors
+
+grim -t ppm - | img-coercer - "$TEMP_CRCD"
+gtklock -b "$TEMP_CRCD"
+rm -f "$TEMP_CRCD"

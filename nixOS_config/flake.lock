@@ -1,0 +1,120 @@
+{
+  "nodes": {
+    "bt-ghost-note": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1785255343,
+        "narHash": "sha256-R8YSLxSOn5fGZej864L6fn+gyao2tJBlm9lGXZ5gXZw=",
+        "owner": "Taugeshtu",
+        "repo": "bt_ghost_note",
+        "rev": "8abf052147b2d2b7b836d9ad6208e851795ace9d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Taugeshtu",
+        "repo": "bt_ghost_note",
+        "type": "github"
+      }
+    },
+    "home-manager": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1787540599,
+        "narHash": "sha256-MHwk52ty3NsLhq9a1IbIfBJZlCUJIdiUYFo52JLK9hY=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "03f4cd46bc1dd4f3a96da778d2ce9f7ce39dd450",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "imv-dir-respect": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1783117856,
+        "narHash": "sha256-vEY105qpWpEhg0vF5usJsFZqLQemxQpHCR/pdiPKhOo=",
+        "owner": "Taugeshtu",
+        "repo": "imv-dir-respect",
+        "rev": "c55ca8366a9ddaa0b302767b727599d40d6f6c26",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Taugeshtu",
+        "repo": "imv-dir-respect",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1787498568,
+        "narHash": "sha256-9i/VTdusq/+NM/tz+J1Re+ojkMB8MBf0QshnYfzHz30=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "56c02bc00adcf003215cc4bd996d6efaf4cff188",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "bt-ghost-note": "bt-ghost-note",
+        "home-manager": "home-manager",
+        "imv-dir-respect": "imv-dir-respect",
+        "nixpkgs": "nixpkgs",
+        "sops-nix": "sops-nix",
+        "to-day": "to-day"
+      }
+    },
+    "sops-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1786629091,
+        "narHash": "sha256-gkig4nPi1CWc4Z50GBsjE4ygSE7hMpl/TwID2an2Cck=",
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "rev": "a8627b21b9107c5711c96b84f32a9a4b3d45295f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Mic92",
+        "repo": "sops-nix",
+        "type": "github"
+      }
+    },
+    "to-day": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784149996,
+        "narHash": "sha256-z//ACtga2r5rzT7kHSFTSt1Wb3nYLAKwITMR8UZgi3w=",
+        "owner": "Taugeshtu",
+        "repo": "TO-DAY",
+        "rev": "b7904beba7a3bf9dc7333d39d1cf5009f40f74a7",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Taugeshtu",
+        "repo": "TO-DAY",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

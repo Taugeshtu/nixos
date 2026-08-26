@@ -1,0 +1,13 @@
+MANUAL POST-INSTALL STEPS
+=========================
+
+1. Rebuild Purse binaries (if source in _Future changed):
+   cd ~/10_PROJECTS/_Future/Purse
+   ./build-install.sh
+
+2. Sync loose binaries from nixOS_move to ~/.local/bin:
+   cp ~/10_PROJECTS/nixOS_move/local_bin/* ~/.local/bin/
+
+3. Check script shebangs:
+   Any script called by UI / desktop / hotkeys must use:
+   #!/usr/bin/env bash

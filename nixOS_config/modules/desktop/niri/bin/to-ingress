@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Move files/directories to ~/00_INGRESS and leave a trace in today's log.
+
+LOG="$HOME/00_INGRESS/$(date +%Y-%m-%d).md"
+mkdir -p "$HOME/00_INGRESS"
+
+for item in "$@"; do
+    name=$(basename "$item")
+    origin=$(realpath "$(dirname "$item")")
+    mv "$item" -t "$HOME/00_INGRESS/"
+    printf '\n**%s**  [file] `%s`  ←  `%s`\n' "$(date +%H:%M)" "$name" "$origin" >> "$LOG"
+done

@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+PATTERN="${1:-}"
+DEST="${2:-.}"
+
+if [ -z "$PATTERN" ]; then
+    echo "Usage: $0 \"<wildcard_pattern>\" [dest_dir]"
+    exit 1
+fi
+
+if [ "$#" -gt 2 ]; then
+    echo "Error: received $# arguments. Put quotes around pattern: \"$1\""
+    exit 1
+fi
+
+if [ -f "$DEST" ]; then
+    echo "Error: destination '$DEST' is a file, not directory. Put quotes around pattern!"
+    exit 1
+fi
+
+mkdir -p "$DEST"
+
+adb shell "stat -c '%s %n' /sdcard/DCIM/Camera/$PATTERN" 2>/dev/null | tr -d '\r' | while read -r r_size r_path; do
+    [ -z "$r_path" ] && continue
+    fname=$(basename "$r_path")
+    target="$DEST/$fname"
+
+    if [ -f "$target" ]; then
+        l_size=$(stat -c %s "$target")
+        if [ "$l_size" -eq "$r_size" ]; then
+            echo "Skip $fname (same size: $r_size bytes)"
+            continue
+        fi
+
+        base="${fname%.*}"
+        ext="${fname##*.}"
+        target="$DEST/${base}_bigger.${ext}"
+
+        if [ -f "$target" ]; then
+            echo "Skip $fname ($target already exists)"
+            continue
+        fi
+    fi
+
+    echo "Pulling $fname -> $target"
+    adb pull "$r_path" "$target"
+done
