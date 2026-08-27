@@ -1,0 +1,9 @@
+[languages]
+rs = "rust"
+md = "markdown"
+
+[servers.rust]
+command = ["rust-analyzer"]
+
+[servers.markdown]
+command = ["markdown-oxide"]

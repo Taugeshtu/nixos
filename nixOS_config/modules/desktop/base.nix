@@ -76,6 +76,11 @@ in
     xdg.configFile."foot".source = ./niri/config/foot;
     xdg.configFile."waybar".source = ./niri/config/waybar;
     xdg.configFile."mpv".source = ./niri/config/mpv;
+    xdg.configFile."imv/config".source = ./niri/config/imv/config;
+    xdg.configFile."macchina".source = ./niri/config/macchina;
+    xdg.configFile."alacritty".source = ./niri/config/alacritty;
+    xdg.configFile."htop/htoprc".source = ./niri/config/htop/htoprc;
+    xdg.configFile."mimeapps.list".source = ./niri/config/mimeapps.list;
     xdg.configFile."Thunar/uca.xml".source = lib.mkDefault ./niri/config/Thunar/uca_base.xml;
     xdg.configFile."Thunar/accels.scm".source = ./niri/config/Thunar/accels.scm;
 
@@ -125,13 +130,10 @@ in
       };
     };
 
-    # Cursor theme
-    home.file.".local/share/icons/RedOmen".source = ./niri/config/icons/RedOmen;
-    home.file.".icons/RedOmen".source = ./niri/config/icons/RedOmen;
-
     # Base Desktop packages
     home.packages = with pkgs; [
       adwaita-icon-theme
+      alacritty
       foot
       fuzzel
       waybar

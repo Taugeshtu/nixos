@@ -18,8 +18,11 @@ Modular configuration tree layout and surface.
   - `to-day.url`: string (`"github:Taugeshtu/TO-DAY"`, `flake = false`)
   - `bt-ghost-note.url`: string (`"github:Taugeshtu/bt_ghost_note"`, `flake = false`)
   - `sops-nix.url`: string (`"github:Mic92/sops-nix"`)
+  - `nixos-hardware.url`: string (`"github:NixOS/nixos-hardware/master"`)
+  - `disko.url`: string (`"github:nix-community/disko"`)
 - **Exports**:
   - `nixosConfigurations.codex`: IdeaPad 5 Pro 16ACH6 configuration
+  - `nixosConfigurations.slate`: Surface Go 3 configuration
 
 ---
 
@@ -33,6 +36,7 @@ Modular configuration tree layout and surface.
   - [`../../modules/core/users.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/core/users.nix)
   - [`../../modules/keyd.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/keyd.nix)
   - [`../../modules/desktop/base.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/desktop/base.nix)
+  - [`../../modules/desktop/theme.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/desktop/theme.nix)
   - [`../../modules/desktop/future.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/desktop/future.nix)
   - [`../../modules/desktop/lock.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/desktop/lock.nix)
   - [`../../modules/desktop/workstation.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/desktop/workstation.nix)
@@ -49,6 +53,28 @@ Modular configuration tree layout and surface.
   - `networking.hostName`: `"codex"`
   - `boot.loader`: systemd-boot (limit 3, EFI)
   - Audio, Bluetooth, Polkit, Home-manager imports
+
+#### [hosts/slate/default.nix](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/hosts/slate/default.nix)
+- **Imports**:
+  - [`./disko.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/hosts/slate/disko.nix)
+  - [`./hardware.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/hosts/slate/hardware.nix)
+  - [`../../modules/core/base.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/core/base.nix)
+  - [`../../modules/core/users.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/core/users.nix)
+  - [`../../modules/keyd.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/keyd.nix)
+  - [`../../modules/desktop/base.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/desktop/base.nix)
+  - [`../../modules/desktop/theme.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/desktop/theme.nix)
+  - [`../../modules/flatpaks/base.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/flatpaks/base.nix)
+  - [`../../modules/flatpaks/everyday.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/flatpaks/everyday.nix)
+  - [`../../modules/flatpaks/communications.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/flatpaks/communications.nix)
+  - [`../../modules/flatpaks/waterfox.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/flatpaks/waterfox.nix)
+- **Options Set**:
+  - `boot.kernelPackages`: `microsoft-surface-go` (`linux-surface`)
+  - `hardware.sensor.iio.enable`: `true` (`iio-sensor-proxy` + `rot8`)
+  - `services.thermald.enable`: `true`
+  - `zramSwap`: 3GB zstd swap
+  - `swapDevices`: 20GB `/cache/swapfile`
+  - `networking.hostName`: `"slate"`
+  - `environment.systemPackages`: `wvkbd`, `libcamera`, `rot8`
 
 ---
 
@@ -70,12 +96,15 @@ Modular configuration tree layout and surface.
 
 #### [modules/desktop/base.nix](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/desktop/base.nix)
 - Niri WM, Greetd / Tuigreet, Xwayland-satellite, dconf
-- Foot, Waybar, MPV, Swaybg, SwayOSD, SwayNC, Wl-clip-persist, Wlsunset, LXQt PolicyKit
+- Foot, Waybar, MPV, Imv, Macchina, Alacritty, Htop, Swaybg, SwayOSD, SwayNC, Wl-clip-persist, Wlsunset, LXQt PolicyKit
 - `bt_ghost_note` package build + `sox`
-- Thunar, Tumbler, Ffmpeg, `uca_base.xml` (Terminal Here, Zip-Zero, Video Shrink)
+- Thunar, Tumbler, Ffmpeg, `uca_base.xml` (Terminal Here, Zip-Zero, Video Shrink), `mimeapps.list`
 - Core scripts: `niri-launcher`, `smart-terminal`, `niri-navigate`, `niri-zen`, `foot-on-path`, `video_shrink`, `lite-open`, `imv-dir-respect`
 - Desktop entries: `lite-open`, `imv-dir`
-- RedOmen cursors
+
+#### [modules/desktop/theme.nix](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/desktop/theme.nix)
+- Fontconfig rendering configuration (`fonts.conf`)
+- Pure `pointerCursor` with `RedOmen` cursor theme (size 24)
 
 #### [modules/desktop/lock.nix](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/modules/desktop/lock.nix)
 - PAM service for `gtklock`
@@ -88,6 +117,7 @@ Modular configuration tree layout and surface.
 - `purse` configs, `purse-defs-smart`, `purse-refs-smart`, `into-purse.sh`, `purse-niri` desktop entry
 - `lite-xl` recursive dotfiles
 - `touch-edge-glide`, `lsp-broker`, `current` user services and scripts
+- `rust-analyzer`, `markdown-oxide` LSP packages
 - `libinput-gestures`, `ydotool`, `wtype`, `xdotool`, GTK4 development libraries
 - Full `uca_full.xml` custom actions
 - `future.kdl` Niri inclusion

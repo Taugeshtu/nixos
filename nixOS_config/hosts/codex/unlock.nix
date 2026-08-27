@@ -49,13 +49,20 @@ let
       ${pkgs.coreutils}/bin/chown tau:users /cache
     fi
 
-    # 4. Mount MergerFS for ~/K
+    # 4. Ensure /cache/tmp exists and is accessible to nixbld (400GB space in Vault)
+    ${pkgs.coreutils}/bin/mkdir -p /cache/tmp
+    ${pkgs.coreutils}/bin/chmod 1777 /cache/tmp
+    if ! ${pkgs.util-linux}/bin/findmnt -M /tmp | ${pkgs.gnugrep}/bin/grep -q '/cache/tmp'; then
+      ${pkgs.util-linux}/bin/mount --bind /cache/tmp /tmp
+    fi
+
+    # 5. Mount MergerFS for ~/K
     if ! ${pkgs.util-linux}/bin/mountpoint -q /home/tau/K; then
       ${pkgs.coreutils}/bin/mkdir -p /home/tau/K /home/tau/.source-dirs/K /home/tau/.bigK
       ${pkgs.mergerfs}/bin/mergerfs -o defaults,allow_other,cache.files=off,dropcacheonclose=false,func.getattr=newest,category.create=epff,uid=1000,gid=100 /home/tau/.source-dirs/K:/home/tau/.bigK /home/tau/K
     fi
 
-    # 5. Activate encrypted disk swap if present
+    # 6. Activate encrypted disk swap if present
     if [ -f /cache/swapfile ]; then
       ${pkgs.util-linux}/bin/swapon --priority 10 /cache/swapfile 2>/dev/null || true
     fi

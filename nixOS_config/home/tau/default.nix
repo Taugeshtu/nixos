@@ -8,6 +8,7 @@
   # Universal user packages (CLI, hardware, audio/network GUIs)
   home.packages = with pkgs; [
     # Fonts
+    comfortaa
     mononoki
     noto-fonts
     noto-fonts-cjk-sans
@@ -37,6 +38,32 @@
     macchina
     which
   ];
+
+  programs.git = {
+    enable = true;
+    settings = {
+      user = {
+        name = "Tykhon \"Taugeshtu\" Gusiev";
+        email = "tau.tihon@gmail.com";
+      };
+      init.defaultBranch = "main";
+    };
+  };
+
+  programs.micro = {
+    enable = true;
+    settings = {
+      mkparents = true;
+      diffgutter = true;
+      parsecursor = true;
+      scrollbar = true;
+    };
+  };
+
+  xdg.configFile."micro/bindings.json".text = builtins.toJSON {
+    "Alt-/" = "lua:comment.comment";
+    "CtrlUnderscore" = "lua:comment.comment";
+  };
 
   programs.home-manager.enable = true;
 }

@@ -2,38 +2,23 @@
 
 {
   imports = [
+    ./disko.nix
     ./hardware.nix
-    ./unlock.nix
     ../../modules/core/base.nix
     ../../modules/core/users.nix
     ../../modules/keyd.nix
     ../../modules/desktop/base.nix
     ../../modules/desktop/theme.nix
-    ../../modules/desktop/future.nix
-    ../../modules/desktop/lock.nix
-    ../../modules/desktop/workstation.nix
-    ../../modules/desktop/gaming.nix
     ../../modules/flatpaks/base.nix
     ../../modules/flatpaks/everyday.nix
     ../../modules/flatpaks/communications.nix
-    ../../modules/flatpaks/workstation.nix
     ../../modules/flatpaks/waterfox.nix
   ];
 
-  networking.hostName = "codex";
+  networking.hostName = "slate";
 
-  # --- Kernel ---
-  boot.kernelPackages = pkgs.linuxPackages_zen;
+  # --- Boot & Kernel ---
   boot.blacklistedKernelModules = [ "pcspkr" ];
-
-  # --- Memory & Swap ---
-  zramSwap = {
-    enable = true;
-    algorithm = "zstd";
-    memoryPercent = 100;
-    memoryMax = 8 * 1024 * 1024 * 1024; # 8 GB
-    priority = 100;
-  };
 
   # --- Bootloader ---
   boot.loader.systemd-boot.enable = true;
@@ -44,14 +29,22 @@
   hardware.bluetooth.enable = true;
   services.blueman.enable = true;
 
-  # --- Audio ---
+  # --- Audio & Camera (PipeWire + IPU3 libcamera) ---
   security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
     alsa.enable = true;
     alsa.support32Bit = true;
     pulse.enable = true;
+    wireplumber.enable = true;
   };
+
+  # --- Slate Specific Packages (Virtual Keeb, Camera tools, Screen Rotation) ---
+  environment.systemPackages = with pkgs; [
+    wvkbd
+    libcamera
+    rot8
+  ];
 
   # --- Security & Auth ---
   security.polkit.enable = true;
@@ -59,7 +52,6 @@
 
   # --- System Services ---
   services.power-profiles-daemon.enable = true;
-  systemd.services.nix-daemon.environment.TMPDIR = "/cache/tmp";
 
   # --- Home Manager Integration ---
   home-manager.useGlobalPkgs = true;

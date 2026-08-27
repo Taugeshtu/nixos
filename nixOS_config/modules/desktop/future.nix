@@ -36,6 +36,7 @@ in
   home-manager.users.tau = { ... }: {
     # Future dotfiles & configs
     xdg.configFile."purse".source = ./niri/config/purse;
+    xdg.configFile."lsp-broker".source = ./niri/config/lsp-broker;
     xdg.configFile."lite-xl" = {
       source = ./niri/config/lite-xl;
       recursive = true;
@@ -128,6 +129,10 @@ in
       ydotool
       wtype
       xdotool
+
+      # Future LSP servers
+      rust-analyzer
+      markdown-oxide
 
       # GTK4 development libraries (for Purse and local tools)
       gtk4
