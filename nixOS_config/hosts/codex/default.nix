@@ -5,6 +5,7 @@
     ./hardware.nix
     ./unlock.nix
     ../../modules/core/base.nix
+    ../../modules/core/mesh.nix
     ../../modules/core/users.nix
     ../../modules/keyd.nix
     ../../modules/desktop/base.nix
@@ -56,6 +57,9 @@
   # --- Security & Auth ---
   security.polkit.enable = true;
   security.sudo.wheelNeedsPassword = true;
+  users.users.tau.openssh.authorizedKeys.keys = [
+    # Slate key will go here once generated
+  ];
 
   # --- System Services ---
   services.power-profiles-daemon.enable = true;

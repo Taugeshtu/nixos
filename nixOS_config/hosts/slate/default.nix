@@ -5,6 +5,7 @@
     ./disko.nix
     ./hardware.nix
     ../../modules/core/base.nix
+    ../../modules/core/mesh.nix
     ../../modules/core/users.nix
     ../../modules/keyd.nix
     ../../modules/desktop/base.nix
@@ -49,6 +50,9 @@
   # --- Security & Auth ---
   security.polkit.enable = true;
   security.sudo.wheelNeedsPassword = true;
+  users.users.tau.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILKQ22iMgAGp9asehvJgjeK2iG1wUKN0D36S7E4r7H2D tau@codex"
+  ];
 
   # --- System Services ---
   services.power-profiles-daemon.enable = true;
