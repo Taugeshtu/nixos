@@ -19,6 +19,7 @@
     ../../modules/flatpaks/communications.nix
     ../../modules/flatpaks/workstation.nix
     ../../modules/flatpaks/waterfox.nix
+    ../../modules/flatpaks/chrome.nix
   ];
 
   networking.hostName = "codex";
