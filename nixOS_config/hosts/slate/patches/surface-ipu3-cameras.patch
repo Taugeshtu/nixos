@@ -1,0 +1,43 @@
+--- a/drivers/media/i2c/dw9719.c
++++ b/drivers/media/i2c/dw9719.c
+@@ -539,6 +539,15 @@ static const struct of_device_id dw9719_of_table[] = {
+ };
+ MODULE_DEVICE_TABLE(of, dw9719_of_table);
+ 
++static const struct i2c_device_id dw9719_id_table[] = {
++	{ "dw9718s", DW9718S },
++	{ "dw9719", DW9719 },
++	{ "dw9761", DW9761 },
++	{ "dw9800k", DW9800K },
++	{ }
++};
++MODULE_DEVICE_TABLE(i2c, dw9719_id_table);
++
+ static DEFINE_RUNTIME_DEV_PM_OPS(dw9719_pm_ops, dw9719_suspend, dw9719_resume,
+ 				 NULL);
+ 
+@@ -548,6 +557,7 @@ static struct i2c_driver dw9719_i2c_driver = {
+ 		.of_match_table = dw9719_of_table,
+ 	},
+ 	.probe = dw9719_probe,
+ 	.remove = dw9719_remove,
++	.id_table = dw9719_id_table,
+ };
+ module_i2c_driver(dw9719_i2c_driver);
+--- a/drivers/media/i2c/ov8865.c
++++ b/drivers/media/i2c/ov8865.c
+@@ -2618,6 +2618,14 @@ static int ov8865_s_stream(struct v4l2_subdev *subdev, int enable)
+ 	}
+ 
+ 	mutex_lock(&sensor->mutex);
++	if (enable) {
++		ret = ov8865_mode_configure(sensor, state->mode, state->mbus_code);
++		if (ret) {
++			mutex_unlock(&sensor->mutex);
++			pm_runtime_put(sensor->dev);
++			return ret;
++		}
++	}
+ 	ret = ov8865_sw_standby(sensor, !enable);
+ 	mutex_unlock(&sensor->mutex);
+ 

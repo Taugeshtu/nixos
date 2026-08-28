@@ -11,6 +11,33 @@
     inputs.nixos-hardware.nixosModules.microsoft-surface-go
   ];
 
+  # --- Kernel & Patches (IPU3 camera fixes) ---
+  boot.kernelPackages =
+    let
+      surfacePkg = pkgs.callPackage (inputs.nixos-hardware + "/microsoft/surface/common/kernel/linux-package.nix") { };
+      surfacePatches = surfacePkg.surfacePatches {
+        version = "6.19.8";
+        patchFn = inputs.nixos-hardware + "/microsoft/surface/common/kernel/6.19/patches.nix";
+        patchSrc = (pkgs.fetchFromGitHub {
+          owner = "linux-surface";
+          repo = "linux-surface";
+          rev = "bf1921fc63f33d03a007fb38c4f88ff7e7bc1a55";
+          hash = "sha256-AV+J1iKpA4PEsX9oVUTGlzGerTWTermia3aJSZxuu/w=";
+        }) + "/patches/6.19";
+      };
+    in
+    lib.mkForce (surfacePkg.linuxPackage {
+      kernelPatches = surfacePatches ++ [
+        {
+          name = "surface-ipu3-cameras";
+          patch = ./patches/surface-ipu3-cameras.patch;
+        }
+      ];
+      version = "6.19.8";
+      sha256 = "sha256-qtpHItuLz6C5cyhRhW1AUIK2pPouOrBnvo2xfN0RWzg=";
+      ignoreConfigErrors = true;
+    });
+
   # --- Boot modules & params ---
   boot.kernelParams = [ "acpi_enforce_resources=lax" ];
   boot.initrd.availableKernelModules = [

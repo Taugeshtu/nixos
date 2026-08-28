@@ -59,7 +59,7 @@
   security.polkit.enable = true;
   security.sudo.wheelNeedsPassword = true;
   users.users.tau.openssh.authorizedKeys.keys = [
-    # Slate key will go here once generated
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDmTvoN2wKMIqhv+5aMqDCcnpQVJ5o5Jpf/ysJ9fMtWD tau@slate"
   ];
 
   # --- System Services ---

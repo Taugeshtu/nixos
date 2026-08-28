@@ -47,6 +47,15 @@
     rot8
   ];
 
+  # --- IPU3 Libcamera Tuning & Calibration ---
+  environment.sessionVariables = {
+    LIBCAMERA_IPA_TUNING_DIR = "/etc/libcamera/ipa";
+  };
+  environment.etc = {
+    "libcamera/ipa/ipu3/ov8865.yaml".source = ./libcamera/ov8865.yaml;
+    "libcamera/ipa/ipu3/ov5693.yaml".source = ./libcamera/ov5693.yaml;
+  };
+
   # --- Security & Auth ---
   security.polkit.enable = true;
   security.sudo.wheelNeedsPassword = true;
