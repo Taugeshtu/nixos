@@ -194,19 +194,19 @@ Device topology
 
 ---
 
-## 7. Current State Summary
+## 7. Current State Summary (Post-Fix)
 
 | Layer | Component | Verified Result | Working? |
 |---|---|---|---|
-| Kernel I2C/ACPI | `ov5693` (Front) | `Found supported sensor INT33BE:00` | Partial (I2C answers, dummy regulator warning) |
-| Kernel I2C/ACPI | `ov8865` (Rear) | `Found supported sensor INT347A:00`, `Instantiated dw9719 VCM` | Partial (I2C answers, VCM attached) |
-| Kernel I2C/ACPI | `ov7251` (IR) | `Found supported sensor INT347E:00` | Partial (I2C answers) |
-| Kernel IPU3 | `ipu3-imgu` | `loaded firmware version irci_irci...` | Yes (Firmware binary loaded) |
-| Media Graph | `ipu3-cio2` | Sensors show `0 link` to `ipu3-csi2` | **NO (Links disconnected in graph)** |
-| Libcamera | `cam -l` | `Skip ipu3-csi2 0: no device node` / `Available cameras: (none)` | **NO (Aborts discovery)** |
-| PipeWire | `wpctl` | `Video -> Sources: NADA` | **NO (Zero video sources)** |
-| Userland UI | GNOME Snapshot | `No Camera Found` | **NO (Zero visual frames)** |
-| Visual Output | Display | Zero frames rendered on NixOS | **NO** |
+| Kernel I2C/ACPI | `ov5693` (Front) | `Found supported sensor INT33BE:00` | **YES** |
+| Kernel I2C/ACPI | `ov8865` (Rear) | `Found supported sensor INT347A:00`, `Instantiated dw9719 VCM` | **YES** |
+| Kernel I2C/ACPI | `ov7251` (IR) | `Found supported sensor INT347E:00` | Partial (I2C detected) |
+| Kernel IPU3 | `ipu3-imgu` | `loaded firmware version irci_irci...` | **YES** |
+| Media Graph | `ipu3-cio2` | Active links established between sensors and CSI-2 receivers | **YES** |
+| Libcamera | `cam -l` | Registers both cameras (`CAMR` receiver 0, `CAMF` receiver 1) | **YES** |
+| PipeWire | `wpctl` | Video sources exposed and connected | **YES** |
+| Userland UI | GNOME Snapshot | Both cameras switchable, live video stream rendered | **YES** |
+| Visual Output | Display | Live video feeds rendering from both cameras | **YES (Workable)** |
 
 ---
 
@@ -224,13 +224,10 @@ Device topology
    - Patched `linux-surface` 6.19.8 kernel derivation directly in `boot.kernelPackages`.
 3. **Libcamera IPU3 Calibration Files (`hosts/slate/default.nix`)**:
    - Added `ov8865.yaml` and `ov5693.yaml` to `/etc/libcamera/ipa/ipu3/` via `environment.etc`.
+   - Set `LIBCAMERA_IPA_TUNING_DIR = "/etc/libcamera/ipa"` in `environment.sessionVariables`.
 
-### 3. Verification Checklist on Slate (VERIFIED ✅)
-After rebuilding and booting the patched system:
-1. `dmesg | grep -i "dw9719"` -> VCM binds successfully (`Instantiated dw9719 VCM`).
-2. `media-ctl -p -d /dev/media0` -> Sensor entities have active links to `ipu3-csi2`.
-3. `cam -l` -> Successfully registered and enumerated:
-   - `1: Internal back camera (\_SB_.PCI0.I2C2.CAMR)` (OV8865 on CSI-2 receiver 0)
-   - `2: Internal front camera (\_SB_.PCI0.I2C4.CAMF)` (OV5693 on CSI-2 receiver 1)
-4. `wpctl status` -> PipeWire video sources exposed.
-5. GNOME Snapshot -> Displays video feeds off both cameras.
+### 3. Live Verification & Current Status (VERIFIED ✅)
+Both cameras are now functional and streaming frames into GNOME Snapshot and PipeWire:
+- **Rear Camera (`OV8865`)**: Streams video; VCM autofocus motor confirmed shifting focus actively. Exposure occasionally oscillates/flickers (known `ipa_ipu3` AGC software algorithm behavior).
+- **Front Camera (`OV5693`)**: Streams video; image tends to render dark due to default software AGC target curve in `libcamera`.
+- **Verdict**: Hardware bringup, ACPI matching, CIO2 media graph routing, VCM driver binding, and userland camera portals are **100% operational**. Remaining artifacts are purely userspace software tuning / IPA algorithm polish.
