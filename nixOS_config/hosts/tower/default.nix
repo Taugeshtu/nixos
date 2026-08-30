@@ -63,11 +63,6 @@
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILKQ22iMgAGp9asehvJgjeK2iG1wUKN0D36S7E4r7H2D tau@codex"
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDmTvoN2wKMIqhv+5aMqDCcnpQVJ5o5Jpf/ysJ9fMtWD tau@slate"
   ];
-  users.users.root.openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILKQ22iMgAGp9asehvJgjeK2iG1wUKN0D36S7E4r7H2D tau@codex"
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDmTvoN2wKMIqhv+5aMqDCcnpQVJ5o5Jpf/ysJ9fMtWD tau@slate"
-  ];
-  services.openssh.settings.PermitRootLogin = "prohibit-password";
   networking.firewall.allowedTCPPorts = [ 22 ];
 
   # --- System Services ---
