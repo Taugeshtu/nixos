@@ -54,6 +54,16 @@
         ];
       };
 
+      # Heavy Workstation / AI Rig (AMD EPYC / Ryzen + Radeon VII)
+      tower = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          home-manager.nixosModules.home-manager
+          ./hosts/tower/default.nix
+        ];
+      };
+
     };
   };
 }

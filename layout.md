@@ -23,6 +23,7 @@ Modular configuration tree layout and surface.
 - **Exports**:
   - `nixosConfigurations.codex`: IdeaPad 5 Pro 16ACH6 configuration
   - `nixosConfigurations.slate`: Surface Go 3 configuration
+  - `nixosConfigurations.tower`: AMD EPYC / Radeon VII Workstation configuration
 
 ---
 
@@ -75,6 +76,19 @@ Modular configuration tree layout and surface.
   - `swapDevices`: 20GB `/cache/swapfile`
   - `networking.hostName`: `"slate"`
   - `environment.systemPackages`: `wvkbd`, `libcamera`, `rot8`
+
+#### [hosts/tower/default.nix](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/hosts/tower/default.nix)
+- **Imports**:
+  - [`./hardware.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/hosts/tower/hardware.nix)
+  - [`./unlock.nix`](file:///home/tau/10_PROJECTS/nixOS_move/nixOS_config/hosts/tower/unlock.nix)
+  - Core & Desktop modules
+- **Options Set**:
+  - `boot.kernelParams`: `[ "fbcon=rotate:3" ]` (counter-clockwise screen rotation in initrd/fbcon)
+  - `boot.kernelPackages`: `pkgs.linuxPackages_zen`
+  - `boot.initrd.kernelModules`: `[ "amdgpu" ]`
+  - `hardware.graphics.enable`: `true` (Radeon VII)
+  - `networking.hostName`: `"tower"`
+  - `boot.loader`: systemd-boot
 
 ---
 
