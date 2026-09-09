@@ -79,8 +79,8 @@ in
     unlockScript
   ];
 
-  # PAM hook: automatically unlock vault when tau authenticates
-  security.pam.services.greetd.text = lib.mkDefault ''
+  # PAM hook: automatically unlock vault when tau authenticates via strikeface (login service)
+  security.pam.services.login.text = lib.mkDefault ''
     # Account & auth
     auth     requisite pam_nologin.so
     auth     required  pam_unix.so     try_first_pass nullok

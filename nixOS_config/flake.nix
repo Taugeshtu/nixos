@@ -27,6 +27,10 @@
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    strikeface = {
+      url = "github:Taugeshtu/strikeface";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     disko = {
       url = "github:nix-community/disko";

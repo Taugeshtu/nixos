@@ -4,6 +4,7 @@
   imports = [
     ./hardware.nix
     ./unlock.nix
+    ./kiosk.nix
     ../../modules/core/base.nix
     ../../modules/core/mesh.nix
     ../../modules/core/users.nix
@@ -87,28 +88,7 @@
     };
   };
 
-  # --- Boutique Kiosk Greeter (Sway + Multi-Monitor Layout) ---
-  services.greetd = {
-    enable = true;
-    settings = {
-      default_session = {
-        command = lib.mkForce "${pkgs.sway}/bin/sway --config ${pkgs.writeText "kiosk-sway.conf" ''
-          output DP-5 pos 0 0 res 1920x1080 bg #ffffff solid_color
-          output DP-4 pos 1920 0 res 1920x1080 transform 270
-
-          default_border none
-          default_floating_border none
-          shortcuts_inhibitor enable
-
-          for_window [app_id="greeter-term"] move to output DP-4, fullscreen enable, focus
-          for_window [app_id="session-viewer"] move to output DP-5, fullscreen enable, focus
-
-          exec ${pkgs.foot}/bin/foot --app-id=greeter-term --override=pad=30x30 ${pkgs.tuigreet}/bin/tuigreet --time --asterisks --remember --cmd ${pkgs.niri}/bin/niri-session
-        ''}";
-        user = "greeter";
-      };
-    };
-  };
+  # Kiosk greeter config is in ./kiosk.nix
 
   # --- Home Manager Integration ---
   home-manager.useGlobalPkgs = true;
