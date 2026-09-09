@@ -70,6 +70,15 @@
   services.power-profiles-daemon.enable = true;
   systemd.services.nix-daemon.environment.TMPDIR = "/cache/tmp";
 
+  # --- Streaming & Remote Display (Sunshine Host) ---
+  users.users.tau.linger = true;
+  services.sunshine = {
+    enable = true;
+    autoStart = true;
+    capSysAdmin = true;
+    openFirewall = true;
+  };
+
   # --- Hardware: Supermicro Fan Baseline ---
   boot.kernelModules = [ "ipmi_devintf" "ipmi_si" ];
   environment.systemPackages = [ pkgs.ipmitool ];

@@ -52,8 +52,7 @@ let
 
     if [ -n "$SOURCE" ]; then
       echo "Launching moonlight → $SOURCE"
-      # TODO: confirm moonlight package name and CLI args
-      ${pkgs.sway}/bin/swaymsg exec "moonlight stream $SOURCE Desktop"
+      ${pkgs.sway}/bin/swaymsg exec "${pkgs.moonlight-qt}/bin/moonlight stream $SOURCE Desktop"
     else
       echo "No source — moonlight detached"
     fi
@@ -72,7 +71,7 @@ let
 
     # Assign apps to Monitor 2 (horizontal, DP-5)
     for_window [app_id="greeter-term"] move to output DP-5, fullscreen enable, focus
-    for_window [app_id="moonlight"] move to output DP-5, fullscreen enable, shortcuts_inhibitor enable
+    for_window [app_id="(?i)moonlight"] move to output DP-5, fullscreen enable, shortcuts_inhibitor enable
 
     # Launch strikeface in foot on Monitor 2 (horizontal, DP-5)
     exec ${pkgs.foot}/bin/foot --app-id=greeter-term --override=pad=30x30 /run/wrappers/bin/strikeface --user tau --loop --session ${towerSession}/bin/tower-session
@@ -136,7 +135,6 @@ in
     strikefacePkg
     pkgs.foot
     pkgs.sway
-    # TODO: moonlight package
-    # pkgs.moonlight-qt
+    pkgs.moonlight-qt
   ];
 }
