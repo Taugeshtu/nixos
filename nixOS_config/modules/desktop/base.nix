@@ -41,6 +41,10 @@ Categories=Utility;Audio;
 EOF
     '';
   };
+
+  wlsunsetFork = pkgs.wlsunset.overrideAttrs (_old: {
+    src = inputs.wlsunset;
+  });
 in
 {
   # --- System Desktop Integration ---
@@ -61,18 +65,31 @@ in
     enable = true;
     settings = {
       default_session = {
-        command = "${pkgs.tuigreet}/bin/tuigreet --time --asterisks --remember --cmd ${pkgs.niri}/bin/niri-session";
+        command = lib.mkDefault "${pkgs.tuigreet}/bin/tuigreet --time --asterisks --remember --cmd ${pkgs.niri}/bin/niri-session";
         user = "greeter";
       };
     };
   };
 
   # --- User Desktop Environment (tau) ---
-  home-manager.users.tau = { ... }: {
+  home-manager.users.tau = { lib, ... }: {
+    # If ~/.config/niri is an old whole-directory symlink to /nix/store, home-manager
+    # fails to write individual recursive files into it (read-only filesystem error).
+    # Remove old directory symlink so home-manager can create a real folder.
+    home.activation.cleanNiriSymlink = lib.hm.dag.entryBefore [ "checkLinkTargets" ] ''
+      if [ -L "$HOME/.config/niri" ]; then
+        $DRY_RUN_CMD rm "$HOME/.config/niri"
+      fi
+    '';
+
     # Pure in-store managed dotfiles
+    xdg.configFile."niri" = {
+      source = ./niri/config/niri;
+      recursive = true;
+    };
     xdg.configFile."niri/lock.kdl".text = lib.mkDefault "";
     xdg.configFile."niri/future.kdl".text = lib.mkDefault "";
-    xdg.configFile."niri".source = ./niri/config/niri;
+    xdg.configFile."niri/outputs.kdl".text = lib.mkDefault "";
     xdg.configFile."foot".source = ./niri/config/foot;
     xdg.configFile."waybar".source = ./niri/config/waybar;
     xdg.configFile."mpv".source = ./niri/config/mpv;
@@ -141,7 +158,7 @@ in
       swayosd
       swaynotificationcenter
       wl-clip-persist
-      wlsunset
+      wlsunsetFork
       lxqt.lxqt-policykit
       grim
       slurp

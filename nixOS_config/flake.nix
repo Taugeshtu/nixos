@@ -19,6 +19,10 @@
       url = "github:Taugeshtu/bt_ghost_note";
       flake = false;
     };
+    wlsunset = {
+      url = "github:Taugeshtu/wlsunset";
+      flake = false;
+    };
     sops-nix = {
       url = "github:Mic92/sops-nix";
       inputs.nixpkgs.follows = "nixpkgs";

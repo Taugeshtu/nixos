@@ -3,12 +3,13 @@
 
 {
   security.pam.services.gtklock = {};
+  security.pam.services.strikeface = {};
 
   home-manager.users.tau = { ... }: {
     # Lock & idle configuration
     xdg.configFile."gtklock".source = ./niri/config/gtklock;
     xdg.configFile."swayidle".source = ./niri/config/swayidle;
-    xdg.configFile."niri/lock.kdl".source = ./niri/config/niri/lock.kdl;
+    xdg.configFile."niri/lock.kdl".source = ./niri/config/snippets/lock.kdl;
 
     # Lock helper scripts
     home.file.".local/bin/img-coercer" = { source = ./niri/bin/img-coercer; executable = true; };

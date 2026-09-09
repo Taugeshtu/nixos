@@ -74,7 +74,17 @@
     inputs.sops-nix.homeManagerModules.sops
     ../../modules/security/secrets.nix
   ];
-  home-manager.users.tau = import ../../home/tau/default.nix;
+  home-manager.users.tau = { ... }: {
+    imports = [ (import ../../home/tau/default.nix) ];
+    xdg.configFile."niri/outputs.kdl".text = ''
+      output "eDP-1" {
+          scale 1.5
+          transform "normal"
+          position x=1280 y=0
+          backdrop-color "#220000"
+      }
+    '';
+  };
 
   # --- Fonts ---
   fonts.packages = with pkgs; [

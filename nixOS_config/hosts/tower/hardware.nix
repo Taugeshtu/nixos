@@ -21,10 +21,20 @@
     lib.mkDefault config.hardware.enableRedistributableFirmware;
   hardware.enableRedistributableFirmware = true;
 
-  # --- Graphics (Radeon VII - open source amdgpu stack) ---
+  # --- Graphics (Radeon VII displays + Tesla V100 compute) ---
   hardware.graphics = {
     enable = true;
     enable32Bit = true;
+  };
+
+  services.xserver.videoDrivers = [ "nvidia" ];
+
+  hardware.nvidia = {
+    open = false; # Volta GV100 requires proprietary driver
+    powerManagement.enable = false;
+    modesetting.enable = true;
+    nvidiaSettings = false;
+    package = config.boot.kernelPackages.nvidiaPackages.stable;
   };
 
   # --- Filesystems (Mirrors Codex Btrfs + Vfat Layout) ---

@@ -74,7 +74,15 @@
     inputs.sops-nix.homeManagerModules.sops
     ../../modules/security/secrets.nix
   ];
-  home-manager.users.tau = import ../../home/tau/default.nix;
+  home-manager.users.tau = { ... }: {
+    imports = [ (import ../../home/tau/default.nix) ];
+    xdg.configFile."niri/outputs.kdl".text = ''
+      output "DSI-1" {
+          scale 2.0
+          transform "normal"
+      }
+    '';
+  };
 
   # --- Fonts ---
   fonts.packages = with pkgs; [

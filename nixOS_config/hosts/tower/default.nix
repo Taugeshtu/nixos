@@ -1,4 +1,4 @@
-{ pkgs, inputs, ... }:
+{ pkgs, lib, inputs, ... }:
 
 {
   imports = [
@@ -69,6 +69,47 @@
   services.power-profiles-daemon.enable = true;
   systemd.services.nix-daemon.environment.TMPDIR = "/cache/tmp";
 
+  # --- Hardware: Supermicro Fan Baseline ---
+  boot.kernelModules = [ "ipmi_devintf" "ipmi_si" ];
+  environment.systemPackages = [ pkgs.ipmitool ];
+  systemd.services.supermicro-fan-quiet = {
+    description = "Set Supermicro Fan Thresholds to quiet mode";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      ExecStart = pkgs.writeShellScript "fan-quiet" ''
+        for fan in FAN1 FAN2 FAN3 FAN4 FAN5 FANA FANB; do
+          ${pkgs.ipmitool}/bin/ipmitool sensor thresh "$fan" lower 0 0 0 || true
+        done
+        ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x45 0x01 0x00 || true
+      '';
+    };
+  };
+
+  # --- Boutique Kiosk Greeter (Sway + Multi-Monitor Layout) ---
+  services.greetd = {
+    enable = true;
+    settings = {
+      default_session = {
+        command = lib.mkForce "${pkgs.sway}/bin/sway --config ${pkgs.writeText "kiosk-sway.conf" ''
+          output DP-5 pos 0 0 res 1920x1080 bg #ffffff solid_color
+          output DP-4 pos 1920 0 res 1920x1080 transform 270
+
+          default_border none
+          default_floating_border none
+          shortcuts_inhibitor enable
+
+          for_window [app_id="greeter-term"] move to output DP-4, fullscreen enable, focus
+          for_window [app_id="session-viewer"] move to output DP-5, fullscreen enable, focus
+
+          exec ${pkgs.foot}/bin/foot --app-id=greeter-term --override=pad=30x30 ${pkgs.tuigreet}/bin/tuigreet --time --asterisks --remember --cmd ${pkgs.niri}/bin/niri-session
+        ''}";
+        user = "greeter";
+      };
+    };
+  };
+
   # --- Home Manager Integration ---
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
@@ -77,7 +118,15 @@
     inputs.sops-nix.homeManagerModules.sops
     ../../modules/security/secrets.nix
   ];
-  home-manager.users.tau = import ../../home/tau/default.nix;
+  home-manager.users.tau = { ... }: {
+    imports = [ (import ../../home/tau/default.nix) ];
+    xdg.configFile."niri/outputs.kdl".text = ''
+      output "HEADLESS-1" {
+          mode "1920x1080@60"
+          scale 1.0
+      }
+    '';
+  };
 
   # --- Fonts ---
   fonts.packages = with pkgs; [

@@ -129,7 +129,8 @@
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_2",
         "sops-nix": "sops-nix",
-        "to-day": "to-day"
+        "to-day": "to-day",
+        "wlsunset": "wlsunset"
       }
     },
     "sops-nix": {
@@ -165,6 +166,22 @@
       "original": {
         "owner": "Taugeshtu",
         "repo": "TO-DAY",
+        "type": "github"
+      }
+    },
+    "wlsunset": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1782944699,
+        "narHash": "sha256-ICFSN2ZznDOksHT4Mh0EVOWYLb01oEGvqqR0cxvxwCE=",
+        "owner": "Taugeshtu",
+        "repo": "wlsunset",
+        "rev": "a93f96e3845ba95701ff6ca0a883307a4c6ee3a2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Taugeshtu",
+        "repo": "wlsunset",
         "type": "github"
       }
     }

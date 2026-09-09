@@ -43,7 +43,7 @@ in
     };
     xdg.configFile."touch-edge-glide".source = ./niri/config/touch-edge-glide;
     xdg.configFile."libinput-gestures.conf".source = ./niri/config/libinput-gestures.conf;
-    xdg.configFile."niri/future.kdl".source = ./niri/config/niri/future.kdl;
+    xdg.configFile."niri/future.kdl".source = ./niri/config/snippets/future.kdl;
     xdg.configFile."Thunar/uca.xml".source = ./niri/config/Thunar/uca_full.xml;
 
     # Future helper scripts
