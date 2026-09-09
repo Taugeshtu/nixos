@@ -73,6 +73,10 @@ let
     fi
 
     echo "=== Vault unlocked and mounted successfully ==="
+
+    # 7. Start tau's headless niri & sunshine
+    echo "Starting headless niri session for tau..."
+    ${pkgs.systemd}/bin/systemctl --user -M tau@ start niri.service || true
   '';
 in
 {

@@ -9,29 +9,10 @@ let
   towerSession = pkgs.writeShellScriptBin "tower-session" ''
     set -euo pipefail
 
-    NIRI_SOCKET="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/niri-socket"
+    # 1. Ensure niri is running (starts sunshine automatically)
+    ${pkgs.systemd}/bin/systemctl --user start niri.service || true
 
-    # 1. Start niri (headless) if not already running
-    if ! ${pkgs.procps}/bin/pgrep -u "$(id -u)" -x niri > /dev/null 2>&1; then
-      echo "Starting niri (headless)..."
-      ${pkgs.coreutils}/bin/setsid ${pkgs.niri}/bin/niri --session > /dev/null 2>&1 &
-      disown
-
-      for i in $(seq 1 20); do
-        [ -e "$NIRI_SOCKET" ] && break
-        sleep 0.25
-      done
-    fi
-
-    # 2. Start sunshine if not already running
-    # TODO: confirm sunshine package and invocation
-    # if ! ''${pkgs.procps}/bin/pgrep -u "$(id -u)" -x sunshine > /dev/null 2>&1; then
-    #   ''${pkgs.coreutils}/bin/setsid sunshine > /dev/null 2>&1 &
-    #   disown
-    #   sleep 1
-    # fi
-
-    # 3. Tell kiosk to show local niri on monitor 2
+    # 2. Tell kiosk to show local niri on monitor 2
     echo "localhost" > /run/kiosk-control/moonlight-source
   '';
 
@@ -46,8 +27,8 @@ let
       SOURCE="$(${pkgs.coreutils}/bin/tr -d '[:space:]' < "$SOURCE_FILE")"
     fi
 
-    # Kill existing moonlight if running
-    ${pkgs.procps}/bin/pkill -u "$(id -u)" -f moonlight 2>/dev/null || true
+    # Kill existing moonlight if running (-x matches exact process name, not this handler script!)
+    ${pkgs.procps}/bin/pkill -u "$(id -u)" -x moonlight 2>/dev/null || true
     sleep 0.5
 
     if [ -n "$SOURCE" ]; then

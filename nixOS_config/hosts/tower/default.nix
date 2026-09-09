@@ -66,6 +66,14 @@
   ];
   networking.firewall.allowedTCPPorts = [ 22 ];
 
+  # Auto-prompt for vault unlock on interactive SSH login if locked
+  environment.interactiveShellInit = ''
+    if [ "$USER" = "tau" ] && [ -n "$SSH_CONNECTION" ] && ! ${pkgs.util-linux}/bin/mountpoint -q /home/tau; then
+      echo "=== Tower Vault is locked ==="
+      unlock-vault
+    fi
+  '';
+
   # --- System Services ---
   services.power-profiles-daemon.enable = true;
   systemd.services.nix-daemon.environment.TMPDIR = "/cache/tmp";
