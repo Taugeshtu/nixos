@@ -61,24 +61,23 @@ let
 
   # Kiosk sway config
   kioskSwayConfig = pkgs.writeText "kiosk-sway.conf" ''
-    # Monitor 1 (horizontal): dashboard / default
-    output DP-5 pos 0 0 res 1920x1080 bg #ffffff solid_color
-
-    # Monitor 2 (vertical): strikeface greeter / moonlight viewer
+    # Monitor 1 (Vertical): permanent kiosk status dashboard
     output DP-4 pos 1920 0 res 1920x1080 transform 270
+
+    # Monitor 2 (Horizontal): context-switched work output (Strikeface when locked, Moonlight when unlocked)
+    output DP-5 pos 0 0 res 1920x1080 bg #000000 solid_color
 
     default_border none
     default_floating_border none
-    shortcuts_inhibitor enable
 
-    # Assign apps to outputs
-    for_window [app_id="greeter-term"] move to output DP-4, fullscreen enable, focus
-    for_window [app_id="moonlight"] move to output DP-4, fullscreen enable
+    # Assign apps to Monitor 2 (horizontal, DP-5)
+    for_window [app_id="greeter-term"] move to output DP-5, fullscreen enable, focus
+    for_window [app_id="moonlight"] move to output DP-5, fullscreen enable, shortcuts_inhibitor enable
 
-    # Launch strikeface in foot on monitor 2 (vertical)
+    # Launch strikeface in foot on Monitor 2 (horizontal, DP-5)
     exec ${pkgs.foot}/bin/foot --app-id=greeter-term --override=pad=30x30 /run/wrappers/bin/strikeface --user tau --loop --session ${towerSession}/bin/tower-session
 
-    # TODO: dashboard app on monitor 1 (DP-5)
+    # TODO: dashboard app on Monitor 1 (vertical, DP-4)
     # exec <dashboard-app>
   '';
 in
