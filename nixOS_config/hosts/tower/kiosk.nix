@@ -27,6 +27,9 @@ let
       SOURCE="$(${pkgs.coreutils}/bin/tr -d '[:space:]' < "$SOURCE_FILE")"
     fi
 
+    # Ensure SWAYSOCK is available
+    export SWAYSOCK="''${SWAYSOCK:-$(find /run/user/$(id -u) -name 'sway-ipc.*.sock' 2>/dev/null | head -n 1)}"
+
     # Kill existing moonlight if running (-x matches exact process name, not this handler script!)
     ${pkgs.procps}/bin/pkill -u "$(id -u)" -x moonlight 2>/dev/null || true
     sleep 0.5
@@ -41,6 +44,9 @@ let
 
   # Kiosk sway config
   kioskSwayConfig = pkgs.writeText "kiosk-sway.conf" ''
+    # Export Sway socket to user systemd session
+    exec ${pkgs.systemd}/bin/systemctl --user import-environment SWAYSOCK WAYLAND_DISPLAY I3SOCK DISPLAY
+
     # Monitor 1 (Vertical): permanent kiosk status dashboard
     output DP-4 pos 1920 0 res 1920x1080 transform 270
 

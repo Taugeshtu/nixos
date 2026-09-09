@@ -161,11 +161,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1788983650,
-        "narHash": "sha256-NTxyGt5KysShgGLojajWIAeR2cPnkFpB1pFdgsPQqMk=",
+        "lastModified": 1788985032,
+        "narHash": "sha256-9wzCii2lISjeqeZvmANscOC6gJXkZcJLbFZ3TCibhz0=",
         "owner": "Taugeshtu",
         "repo": "strikeface",
-        "rev": "bb0904f92a4568c7401091da066ea28fc20ce39e",
+        "rev": "d3c943bd4fcbcb7d6bdf5a127e8ac27ece02f527",
         "type": "github"
       },
       "original": {
