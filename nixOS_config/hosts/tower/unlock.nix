@@ -3,6 +3,11 @@
 
 let
   unlockScript = pkgs.writeShellScriptBin "unlock-vault" ''
+    # Auto-elevate via sudo if run interactively as non-root
+    if [ "$(id -u)" -ne 0 ]; then
+      exec /run/wrappers/bin/sudo "$0" "$@"
+    fi
+
     exec >> /var/log/unlock_debug.log 2>&1
     set -x
     echo "=== unlock-vault started at $(${pkgs.coreutils}/bin/date) for user $PAM_USER ==="
@@ -80,7 +85,7 @@ in
   ];
 
   # PAM hook: automatically unlock vault when tau authenticates via strikeface (login service)
-  security.pam.services.login.text = lib.mkDefault ''
+  security.pam.services.login.text = lib.mkForce ''
     # Account & auth
     auth     requisite pam_nologin.so
     auth     required  pam_unix.so     try_first_pass nullok
