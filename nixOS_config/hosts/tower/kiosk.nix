@@ -9,7 +9,10 @@ let
   towerSession = pkgs.writeShellScriptBin "tower-session" ''
     set -euo pipefail
 
-    # 1. Ensure niri is running fresh (nested in Sway)
+    # 1. Ensure systemd user session has ~/.local/bin in PATH
+    ${pkgs.systemd}/bin/systemctl --user set-environment PATH="/home/tau/.local/bin:$PATH"
+
+    # 2. Ensure niri is running fresh (nested in Sway)
     ${pkgs.systemd}/bin/systemctl --user restart niri.service || true
 
     # 2. Switch DP-5 to workspace 2 (work)
@@ -137,6 +140,7 @@ in
 
   # --- Nested Niri inside Sway ---
   systemd.user.services.niri.environment.WAYLAND_DISPLAY = "/run/kiosk-control/sway-wayland.sock";
+  systemd.user.services.niri.environment.PATH = "/home/tau/.local/bin:/run/wrappers/bin:/home/tau/.local/share/flatpak/exports/bin:/var/lib/flatpak/exports/bin:/home/tau/.nix-profile/bin:/nix/profile/bin:/home/tau/.local/state/nix/profile/bin:/etc/profiles/per-user/tau/bin:/nix/var/nix/profiles/default/bin:/run/current-system/sw/bin";
   systemd.user.services.niri.serviceConfig.ExecStart = lib.mkForce [ "" "${pkgs.niri}/bin/niri" ];
 
   # --- Packages needed on Tower for the kiosk flow ---
