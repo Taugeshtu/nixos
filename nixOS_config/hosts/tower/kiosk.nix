@@ -169,8 +169,8 @@ in
       before-sleep '${towerLock}/bin/tower-lock'
     '');
 
-    xdg.configFile."niri/lock.kdl" = {
-      text = lib.mkForce ''
+    xdg.configFile."niri/lock.kdl" = lib.mkForce {
+      text = ''
         spawn-at-startup "swayidle" "-w"
 
         binds {
