@@ -34,7 +34,7 @@
     powerManagement.enable = false;
     modesetting.enable = true;
     nvidiaSettings = false;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    package = config.boot.kernelPackages.nvidiaPackages.legacy_580;
   };
 
   # --- Filesystems (Mirrors Codex Btrfs + Vfat Layout) ---
