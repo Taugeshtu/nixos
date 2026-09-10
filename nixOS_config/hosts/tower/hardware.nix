@@ -32,9 +32,40 @@
   hardware.nvidia = {
     open = false; # Volta GV100 requires proprietary driver
     powerManagement.enable = false;
+    nvidiaPersistenced = true;
     modesetting.enable = true;
     nvidiaSettings = false;
     package = config.boot.kernelPackages.nvidiaPackages.legacy_580;
+  };
+
+  # Lock Tesla V100 power limit to 200W on boot
+  systemd.services.nvidia-power-limit = {
+    description = "Lock Tesla V100 power limit to 200W";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "nvidia-persistenced.service" ];
+    wants = [ "nvidia-persistenced.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = "${config.hardware.nvidia.package.bin}/bin/nvidia-smi -i 0000:01:00.0 -pl 200";
+    };
+  };
+
+  # Lock Radeon VII power limit to 200W on boot
+  systemd.services.radeon-power-limit = {
+    description = "Lock Radeon VII power limit to 200W";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "radeon-power-limit" ''
+        for cap in /sys/bus/pci/devices/0000:c3:00.0/hwmon/hwmon*/power1_cap; do
+          if [ -w "$cap" ]; then
+            echo 200000000 > "$cap"
+          fi
+        done
+      '';
+    };
   };
 
   # --- Filesystems (Mirrors Codex Btrfs + Vfat Layout) ---
