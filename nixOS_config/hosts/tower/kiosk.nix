@@ -137,7 +137,7 @@ in
 
   # --- Nested Niri inside Sway ---
   systemd.user.services.niri.environment.WAYLAND_DISPLAY = "/run/kiosk-control/sway-wayland.sock";
-  systemd.user.services.niri.serviceConfig.ExecStart = lib.mkForce "${pkgs.niri}/bin/niri";
+  systemd.user.services.niri.serviceConfig.ExecStart = lib.mkForce [ "" "${pkgs.niri}/bin/niri" ];
 
   # --- Packages needed on Tower for the kiosk flow ---
   environment.systemPackages = [
