@@ -23,14 +23,14 @@ The BMC firmware has no visibility into PCIe GPU temperatures. A systemd daemon 
 2. **BMC Override**: Puts BMC into Full Speed mode (`ipmitool raw 0x30 0x45 0x01 0x01`) to unlock software PWM writes without BMC loop fighting.
 3. **Zone 1 (CPU Curve)**:
    - Reads: EPYC 7402 socket temperature from `k10temp` (`/sys/class/hwmon/.../temp1_input`).
-   - Curve: 25% PWM @ <= 35°C -> 100% PWM @ >= 75°C (linear).
+   - Curve: 25% PWM @ <= 50°C -> 100% PWM @ >= 75°C (linear, immune to transient boost spikes).
    - Target: `FANA` and `FANB`.
 4. **Zone 0 (GPU Curve)**:
    - Reads: Tesla V100 (`nvidia-smi`) and Radeon VII (`/sys/bus/pci/devices/0000:c3:00.0/hwmon/.../temp1_input`).
    - Control Temp: max(Temp_V100, Temp_VII).
    - Curve: 25% PWM @ <= 40°C -> 100% PWM @ >= 80°C (linear).
    - Target: `FAN2` (blower), `FAN3`, `FAN4` (case PCIe intakes).
-5. **Hysteresis / Damping**: Only sends raw IPMI commands when calculated PWM changes by >= 3% to minimize BMC I2C bus traffic.
+5. **Change-Triggered Logging**: Only sends raw IPMI commands and logs timestamped entries to systemd journal when PWM duty cycle actually changes (zero I2C register spamming).
 6. **Failsafe**: On service stop, resets BMC to Standard Auto (`0x00`) so fans never stall.
 
 ---

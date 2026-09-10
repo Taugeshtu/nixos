@@ -114,7 +114,6 @@
         trap cleanup SIGTERM SIGINT EXIT
 
         last_c=-1; last_g=-1
-        ticks=0
         while true; do
           c_temp=40
           for d in /sys/class/hwmon/hwmon*; do
@@ -130,25 +129,26 @@
           v_temp=$(${config.hardware.nvidia.package.bin}/bin/nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null || echo 40)
           g_temp=$(( v_temp > r_temp ? v_temp : r_temp ))
 
-          # Zone 1 (CPU): 35C->25%, 75C->100%
-          if [ "$c_temp" -le 35 ]; then c_pwm=25; elif [ "$c_temp" -ge 75 ]; then c_pwm=100
-          else c_pwm=$(( 25 + (c_temp - 35) * 75 / 40 )); fi
+          # Zone 1 (CPU): 50C->25%, 75C->100% (knee at 50C ignores transient boost spikes)
+          if [ "$c_temp" -le 50 ]; then c_pwm=25; elif [ "$c_temp" -ge 75 ]; then c_pwm=100
+          else c_pwm=$(( 25 + (c_temp - 50) * 75 / 25 )); fi
 
           # Zone 0 (GPUs): 40C->25%, 80C->100%
           if [ "$g_temp" -le 40 ]; then g_pwm=25; elif [ "$g_temp" -ge 80 ]; then g_pwm=100
           else g_pwm=$(( 25 + (g_temp - 40) * 75 / 40 )); fi
 
-          # Re-apply when PWM changes OR every ~32 seconds heartbeat
-          if [ "$c_pwm" != "$last_c" ] || [ $(( ticks % 8 )) -eq 0 ]; then
+          # Re-apply and log only when PWM duty cycle actually changes
+          if [ "$c_pwm" != "$last_c" ]; then
+            echo "[$(date +'%T')] CPU: $c_temp C -> Zone 1: $c_pwm%"
             ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x70 0x66 0x01 0x01 $(printf "0x%02x" "$c_pwm") >/dev/null 2>&1 || true
             last_c=$c_pwm
           fi
-          if [ "$g_pwm" != "$last_g" ] || [ $(( ticks % 8 )) -eq 0 ]; then
+          if [ "$g_pwm" != "$last_g" ]; then
+            echo "[$(date +'%T')] GPU: $g_temp C (V100: $v_temp C, VII: $r_temp C) -> Zone 0: $g_pwm%"
             ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x70 0x66 0x01 0x00 $(printf "0x%02x" "$g_pwm") >/dev/null 2>&1 || true
             last_g=$g_pwm
           fi
 
-          ticks=$(( ticks + 1 ))
           sleep 4
         done
       '';
