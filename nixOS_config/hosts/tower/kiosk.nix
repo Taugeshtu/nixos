@@ -25,7 +25,7 @@ let
 
     # 3. Switch DP-5 to workspace 2 (work)
     if [ -S /run/kiosk-control/sway-ipc.sock ]; then
-      ${pkgs.sway}/bin/swaymsg -s /run/kiosk-control/sway-ipc.sock "focus output DP-5; workspace 2" || true
+      ${pkgs.sway}/bin/swaymsg -s /run/kiosk-control/sway-ipc.sock "focus output DP-5; workspace 2; [app_id=(?i).*niri.*] focus" || true
     fi
   '';
 
@@ -88,7 +88,7 @@ let
     # Assign apps to workspaces (shortcuts_inhibitor on all to prevent key leaks)
     for_window [app_id="kiosk-dashboard"] move to workspace 10, fullscreen enable, shortcuts_inhibitor enable
     for_window [app_id="greeter-term"] move to workspace 1, fullscreen enable, shortcuts_inhibitor enable, focus
-    for_window [app_id="(?i).*niri.*"] move to workspace 2, fullscreen enable, shortcuts_inhibitor enable, focus
+    for_window [app_id="(?i).*niri.*"] move to workspace 2, fullscreen enable, shortcuts_inhibitor enable
     for_window [app_id="(?i).*moonlight.*"] move to workspace 3, fullscreen enable, shortcuts_inhibitor enable
 
     # Launch dashboard on Monitor 1 (vertical, DP-4)
