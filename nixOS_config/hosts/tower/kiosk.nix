@@ -5,17 +5,25 @@
 let
   strikefacePkg = inputs.strikeface.packages.${pkgs.system}.default;
 
-  # Post-auth script: restarts niri, focuses workspace 2 on DP-5
+  # Lock script: switches DP-5 back to strikeface on workspace 1
+  towerLock = pkgs.writeShellScriptBin "tower-lock" ''
+    set -euo pipefail
+    if [ -S /run/kiosk-control/sway-ipc.sock ]; then
+      ${pkgs.sway}/bin/swaymsg -s /run/kiosk-control/sway-ipc.sock "focus output DP-5; workspace 1; [app_id=greeter-term] focus" || true
+    fi
+  '';
+
+  # Post-auth script: starts niri if needed, focuses workspace 2 on DP-5
   towerSession = pkgs.writeShellScriptBin "tower-session" ''
     set -euo pipefail
 
     # 1. Ensure systemd user session has ~/.local/bin in PATH
     ${pkgs.systemd}/bin/systemctl --user set-environment PATH="/home/tau/.local/bin:$PATH"
 
-    # 2. Ensure niri is running fresh (nested in Sway)
-    ${pkgs.systemd}/bin/systemctl --user restart niri.service || true
+    # 2. Ensure niri is running (nested in Sway) - start, not restart, to keep session alive
+    ${pkgs.systemd}/bin/systemctl --user start niri.service || true
 
-    # 2. Switch DP-5 to workspace 2 (work)
+    # 3. Switch DP-5 to workspace 2 (work)
     if [ -S /run/kiosk-control/sway-ipc.sock ]; then
       ${pkgs.sway}/bin/swaymsg -s /run/kiosk-control/sway-ipc.sock "focus output DP-5; workspace 2" || true
     fi
@@ -68,6 +76,8 @@ let
 
     default_border none
     default_floating_border none
+    floating_modifier none
+    focus_follows_mouse no
 
     # Assign workspaces to outputs
     workspace 10 output DP-4
@@ -75,9 +85,9 @@ let
     workspace 2 output DP-5
     workspace 3 output DP-5
 
-    # Assign apps to workspaces
-    for_window [app_id="kiosk-dashboard"] move to workspace 10, fullscreen enable
-    for_window [app_id="greeter-term"] move to workspace 1, fullscreen enable, focus
+    # Assign apps to workspaces (shortcuts_inhibitor on all to prevent key leaks)
+    for_window [app_id="kiosk-dashboard"] move to workspace 10, fullscreen enable, shortcuts_inhibitor enable
+    for_window [app_id="greeter-term"] move to workspace 1, fullscreen enable, shortcuts_inhibitor enable, focus
     for_window [app_id="(?i).*niri.*"] move to workspace 2, fullscreen enable, shortcuts_inhibitor enable, focus
     for_window [app_id="(?i).*moonlight.*"] move to workspace 3, fullscreen enable, shortcuts_inhibitor enable
 
@@ -149,5 +159,24 @@ in
     pkgs.foot
     pkgs.sway
     pkgs.moonlight-qt
+    towerLock
   ];
+
+  # --- Tower lock & idle bindings: Mod+L and timeout flip to Strikeface ---
+  home-manager.users.tau = { lib, ... }: {
+    xdg.configFile."swayidle".source = lib.mkForce (pkgs.writeTextDir "config" ''
+      timeout 900 '${towerLock}/bin/tower-lock'
+      before-sleep '${towerLock}/bin/tower-lock'
+    '');
+
+    xdg.configFile."niri/lock.kdl" = {
+      text = lib.mkForce ''
+        spawn-at-startup "swayidle" "-w"
+
+        binds {
+            Mod+L hotkey-overlay-title="[Lock]" { spawn "${towerLock}/bin/tower-lock"; }
+        }
+      '';
+    };
+  };
 }
