@@ -86,6 +86,7 @@
     capSysAdmin = true;
     openFirewall = true;
   };
+  systemd.user.services.sunshine.environment.RADV_DEBUG = "novideo";
 
   # --- Hardware: Supermicro Fan Baseline ---
   boot.kernelModules = [ "ipmi_devintf" "ipmi_si" ];
