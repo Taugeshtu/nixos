@@ -75,7 +75,7 @@ let
     # Assign apps to workspaces
     for_window [app_id="kiosk-dashboard"] move to workspace 10, fullscreen enable
     for_window [app_id="greeter-term"] move to workspace 1, fullscreen enable, focus
-    for_window [app_id="(?i).*niri.*"] move to workspace 2, fullscreen enable, focus
+    for_window [app_id="(?i).*niri.*"] move to workspace 2, fullscreen enable, shortcuts_inhibitor enable, focus
     for_window [app_id="(?i).*moonlight.*"] move to workspace 3, fullscreen enable, shortcuts_inhibitor enable
 
     # Launch dashboard on Monitor 1 (vertical, DP-4)
@@ -137,6 +137,7 @@ in
 
   # --- Nested Niri inside Sway ---
   systemd.user.services.niri.environment.WAYLAND_DISPLAY = "/run/kiosk-control/sway-wayland.sock";
+  systemd.user.services.niri.serviceConfig.ExecStart = lib.mkForce "${pkgs.niri}/bin/niri";
 
   # --- Packages needed on Tower for the kiosk flow ---
   environment.systemPackages = [
