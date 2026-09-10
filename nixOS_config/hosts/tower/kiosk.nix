@@ -5,16 +5,16 @@
 let
   strikefacePkg = inputs.strikeface.packages.${pkgs.system}.default;
 
-  # Post-auth script: starts niri, switches to workspace 2
+  # Post-auth script: restarts niri, focuses workspace 2 on DP-5
   towerSession = pkgs.writeShellScriptBin "tower-session" ''
     set -euo pipefail
 
-    # 1. Ensure niri is running (nested in Sway)
-    ${pkgs.systemd}/bin/systemctl --user start niri.service || true
+    # 1. Ensure niri is running fresh (nested in Sway)
+    ${pkgs.systemd}/bin/systemctl --user restart niri.service || true
 
-    # 2. Switch Sway to workspace 2 (work)
+    # 2. Switch DP-5 to workspace 2 (work)
     if [ -S /run/kiosk-control/sway-ipc.sock ]; then
-      ${pkgs.sway}/bin/swaymsg -s /run/kiosk-control/sway-ipc.sock workspace 2 || true
+      ${pkgs.sway}/bin/swaymsg -s /run/kiosk-control/sway-ipc.sock "focus output DP-5; workspace 2" || true
     fi
   '';
 
@@ -66,21 +66,23 @@ let
     default_border none
     default_floating_border none
 
-    # Assign workspaces to Monitor 2 (DP-5)
+    # Assign workspaces to outputs
+    workspace 10 output DP-4
     workspace 1 output DP-5
     workspace 2 output DP-5
     workspace 3 output DP-5
 
-    # Assign apps to workspaces on DP-5
+    # Assign apps to workspaces
+    for_window [app_id="kiosk-dashboard"] move to workspace 10, fullscreen enable
     for_window [app_id="greeter-term"] move to workspace 1, fullscreen enable, focus
-    for_window [app_id="niri"] move to workspace 2, fullscreen enable, focus
+    for_window [app_id="(?i).*niri.*"] move to workspace 2, fullscreen enable, focus
     for_window [app_id="(?i).*moonlight.*"] move to workspace 3, fullscreen enable, shortcuts_inhibitor enable
 
-    # Launch strikeface in foot on workspace 1
-    exec ${pkgs.foot}/bin/foot --app-id=greeter-term --override=pad=30x30 /run/wrappers/bin/strikeface --user tau --loop --session ${towerSession}/bin/tower-session
+    # Launch dashboard on Monitor 1 (vertical, DP-4)
+    exec ${pkgs.foot}/bin/foot --app-id=kiosk-dashboard ${pkgs.htop}/bin/htop
 
-    # TODO: dashboard app on Monitor 1 (vertical, DP-4)
-    # exec <dashboard-app>
+    # Launch strikeface in foot on Monitor 2 (horizontal, DP-5)
+    exec ${pkgs.foot}/bin/foot --app-id=greeter-term --override=pad=30x30 /run/wrappers/bin/strikeface --user tau --loop --session ${towerSession}/bin/tower-session
   '';
 in
 {
