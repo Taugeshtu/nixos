@@ -5,18 +5,20 @@
 let
   strikefacePkg = inputs.strikeface.packages.${pkgs.system}.default;
 
-  # Post-auth script: starts niri + sunshine, signals kiosk
+  # Post-auth script: starts niri, switches to workspace 2
   towerSession = pkgs.writeShellScriptBin "tower-session" ''
     set -euo pipefail
 
-    # 1. Ensure niri is running (starts sunshine automatically)
+    # 1. Ensure niri is running (nested in Sway)
     ${pkgs.systemd}/bin/systemctl --user start niri.service || true
 
-    # 2. Tell kiosk to show local niri on monitor 2
-    echo "localhost" > /run/kiosk-control/moonlight-source
+    # 2. Switch Sway to workspace 2 (work)
+    if [ -S /run/kiosk-control/sway-ipc.sock ]; then
+      ${pkgs.sway}/bin/swaymsg -s /run/kiosk-control/sway-ipc.sock workspace 2 || true
+    fi
   '';
 
-  # Kiosk-side handler: reads state file, manages moonlight
+  # Kiosk-side handler: reads state file, manages moonlight for remote sources (e.g. Codex)
   kioskMoonlightHandler = pkgs.writeShellScript "kiosk-moonlight-handler" ''
     set -euo pipefail
 
@@ -27,16 +29,16 @@ let
       SOURCE="$(${pkgs.coreutils}/bin/tr -d '[:space:]' < "$SOURCE_FILE")"
     fi
 
-    # Ensure SWAYSOCK is available
-    export SWAYSOCK="''${SWAYSOCK:-$(find /run/user/$(id -u) -name 'sway-ipc.*.sock' 2>/dev/null | head -n 1)}"
+    SWAYSOCK="/run/kiosk-control/sway-ipc.sock"
 
-    # Kill existing moonlight if running (-x matches exact process name, not this handler script!)
-    ${pkgs.procps}/bin/pkill -u "$(id -u)" -x moonlight 2>/dev/null || true
+    # Kill existing moonlight if running
+    ${pkgs.procps}/bin/pkill -u "$(id -u)" -f moonlight 2>/dev/null || true
     sleep 0.5
 
-    if [ -n "$SOURCE" ]; then
-      echo "Launching moonlight → $SOURCE"
-      ${pkgs.sway}/bin/swaymsg exec "${pkgs.moonlight-qt}/bin/moonlight stream $SOURCE Desktop"
+    if [ -n "$SOURCE" ] && [ "$SOURCE" != "none" ]; then
+      echo "Launching moonlight → $SOURCE on workspace 3"
+      ${pkgs.sway}/bin/swaymsg -s "$SWAYSOCK" exec "${pkgs.moonlight-qt}/bin/moonlight stream $SOURCE Desktop"
+      ${pkgs.sway}/bin/swaymsg -s "$SWAYSOCK" workspace 3 || true
     else
       echo "No source — moonlight detached"
     fi
@@ -44,23 +46,37 @@ let
 
   # Kiosk sway config
   kioskSwayConfig = pkgs.writeText "kiosk-sway.conf" ''
-    # Export Sway socket to user systemd session
-    exec ${pkgs.systemd}/bin/systemctl --user import-environment SWAYSOCK WAYLAND_DISPLAY I3SOCK DISPLAY
+    # Share Wayland and IPC sockets with kiosk-control group
+    exec ${pkgs.bash}/bin/bash -c '\
+      chmod 750 "$XDG_RUNTIME_DIR" && \
+      chgrp kiosk-control "$XDG_RUNTIME_DIR" && \
+      chmod 660 "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" && \
+      chgrp kiosk-control "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" && \
+      chmod 660 "$SWAYSOCK" && \
+      chgrp kiosk-control "$SWAYSOCK" && \
+      ln -sf "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" /run/kiosk-control/sway-wayland.sock && \
+      ln -sf "$SWAYSOCK" /run/kiosk-control/sway-ipc.sock'
 
     # Monitor 1 (Vertical): permanent kiosk status dashboard
     output DP-4 pos 1920 0 res 1920x1080 transform 270
 
-    # Monitor 2 (Horizontal): context-switched work output (Strikeface when locked, Moonlight when unlocked)
+    # Monitor 2 (Horizontal): context-switched work output
     output DP-5 pos 0 0 res 1920x1080 bg #000000 solid_color
 
     default_border none
     default_floating_border none
 
-    # Assign apps to Monitor 2 (horizontal, DP-5)
-    for_window [app_id="greeter-term"] move to output DP-5, fullscreen enable, focus
-    for_window [app_id="(?i)moonlight"] move to output DP-5, fullscreen enable, shortcuts_inhibitor enable
+    # Assign workspaces to Monitor 2 (DP-5)
+    workspace 1 output DP-5
+    workspace 2 output DP-5
+    workspace 3 output DP-5
 
-    # Launch strikeface in foot on Monitor 2 (horizontal, DP-5)
+    # Assign apps to workspaces on DP-5
+    for_window [app_id="greeter-term"] move to workspace 1, fullscreen enable, focus
+    for_window [app_id="niri"] move to workspace 2, fullscreen enable, focus
+    for_window [app_id="(?i).*moonlight.*"] move to workspace 3, fullscreen enable, shortcuts_inhibitor enable
+
+    # Launch strikeface in foot on workspace 1
     exec ${pkgs.foot}/bin/foot --app-id=greeter-term --override=pad=30x30 /run/wrappers/bin/strikeface --user tau --loop --session ${towerSession}/bin/tower-session
 
     # TODO: dashboard app on Monitor 1 (vertical, DP-4)
@@ -116,6 +132,9 @@ in
       Unit = "kiosk-moonlight-handler.service";
     };
   };
+
+  # --- Nested Niri inside Sway ---
+  systemd.user.services.niri.environment.WAYLAND_DISPLAY = "/run/kiosk-control/sway-wayland.sock";
 
   # --- Packages needed on Tower for the kiosk flow ---
   environment.systemPackages = [
