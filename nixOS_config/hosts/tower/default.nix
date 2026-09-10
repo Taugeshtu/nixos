@@ -105,6 +105,7 @@
           ${pkgs.ipmitool}/bin/ipmitool sensor thresh "$fan" lower 0 0 0 || true
         done
         ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x45 0x01 0x01 || true
+        sleep 2
 
         cleanup() {
           ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x45 0x01 0x00 || true
@@ -113,6 +114,7 @@
         trap cleanup SIGTERM SIGINT EXIT
 
         last_c=-1; last_g=-1
+        ticks=0
         while true; do
           c_temp=40
           for d in /sys/class/hwmon/hwmon*; do
@@ -136,14 +138,17 @@
           if [ "$g_temp" -le 40 ]; then g_pwm=25; elif [ "$g_temp" -ge 80 ]; then g_pwm=100
           else g_pwm=$(( 25 + (g_temp - 40) * 75 / 40 )); fi
 
-          if [ "$c_pwm" != "$last_c" ]; then
+          # Re-apply when PWM changes OR every ~32 seconds heartbeat
+          if [ "$c_pwm" != "$last_c" ] || [ $(( ticks % 8 )) -eq 0 ]; then
             ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x70 0x66 0x01 0x01 $(printf "0x%02x" "$c_pwm") >/dev/null 2>&1 || true
             last_c=$c_pwm
           fi
-          if [ "$g_pwm" != "$last_g" ]; then
+          if [ "$g_pwm" != "$last_g" ] || [ $(( ticks % 8 )) -eq 0 ]; then
             ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x70 0x66 0x01 0x00 $(printf "0x%02x" "$g_pwm") >/dev/null 2>&1 || true
             last_g=$g_pwm
           fi
+
+          ticks=$(( ticks + 1 ))
           sleep 4
         done
       '';
