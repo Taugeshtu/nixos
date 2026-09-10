@@ -1,4 +1,4 @@
-{ pkgs, lib, inputs, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
   imports = [
@@ -91,17 +91,61 @@
   # --- Hardware: Supermicro Fan Baseline ---
   boot.kernelModules = [ "ipmi_devintf" "ipmi_si" ];
   environment.systemPackages = [ pkgs.ipmitool ];
-  systemd.services.supermicro-fan-quiet = {
-    description = "Set Supermicro Fan Thresholds to quiet mode";
+  systemd.services.supermicro-fan-control = {
+    description = "Dynamic Dual-Zone Fan Control (CPU Zone 1, GPU Zone 0)";
     wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" ];
+    after = [ "network.target" "nvidia-persistenced.service" ];
+    path = [ pkgs.ipmitool config.hardware.nvidia.package.bin pkgs.coreutils ];
     serviceConfig = {
-      Type = "oneshot";
-      ExecStart = pkgs.writeShellScript "fan-quiet" ''
+      Type = "simple";
+      Restart = "always";
+      RestartSec = "5s";
+      ExecStart = pkgs.writeShellScript "supermicro-fan-control" ''
         for fan in FAN1 FAN2 FAN3 FAN4 FAN5 FANA FANB; do
           ${pkgs.ipmitool}/bin/ipmitool sensor thresh "$fan" lower 0 0 0 || true
         done
-        ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x45 0x01 0x00 || true
+        ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x45 0x01 0x01 || true
+
+        cleanup() {
+          ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x45 0x01 0x00 || true
+          exit 0
+        }
+        trap cleanup SIGTERM SIGINT EXIT
+
+        last_c=-1; last_g=-1
+        while true; do
+          c_temp=40
+          for d in /sys/class/hwmon/hwmon*; do
+            if [ -f "$d/name" ] && [ "$(< "$d/name")" = "k10temp" ] && [ -f "$d/temp1_input" ]; then
+              c_temp=$(( $(< "$d/temp1_input") / 1000 )); break
+            fi
+          done
+
+          r_temp=40
+          for f in /sys/bus/pci/devices/0000:c3:00.0/hwmon/hwmon*/temp1_input; do
+            if [ -f "$f" ]; then r_temp=$(( $(< "$f") / 1000 )); break; fi
+          done
+          v_temp=$(${config.hardware.nvidia.package.bin}/bin/nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null || echo 40)
+          g_temp=$(( v_temp > r_temp ? v_temp : r_temp ))
+
+          # Zone 1 (CPU): 35C->25%, 75C->100%
+          if [ "$c_temp" -le 35 ]; then c_pwm=25; elif [ "$c_temp" -ge 75 ]; then c_pwm=100
+          else c_pwm=$(( 25 + (c_temp - 35) * 75 / 40 )); fi
+
+          # Zone 0 (GPUs): 40C->25%, 80C->100%
+          if [ "$g_temp" -le 40 ]; then g_pwm=25; elif [ "$g_temp" -ge 80 ]; then g_pwm=100
+          else g_pwm=$(( 25 + (g_temp - 40) * 75 / 40 )); fi
+
+          if [ "$c_pwm" != "$last_c" ]; then
+            ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x70 0x66 0x01 0x01 $(printf "0x%02x" "$c_pwm") >/dev/null 2>&1 || true
+            last_c=$c_pwm
+          fi
+          if [ "$g_pwm" != "$last_g" ]; then
+            ${pkgs.ipmitool}/bin/ipmitool raw 0x30 0x70 0x66 0x01 0x00 $(printf "0x%02x" "$g_pwm") >/dev/null 2>&1 || true
+            last_g=$g_pwm
+          fi
+          sleep 4
+        done
       '';
     };
   };
