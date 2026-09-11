@@ -133,9 +133,9 @@
           if [ "$c_temp" -le 50 ]; then c_pwm=25; elif [ "$c_temp" -ge 75 ]; then c_pwm=100
           else c_pwm=$(( 25 + (c_temp - 50) * 75 / 25 )); fi
 
-          # Zone 0 (GPUs): 40C->25%, 80C->100%
-          if [ "$g_temp" -le 40 ]; then g_pwm=25; elif [ "$g_temp" -ge 80 ]; then g_pwm=100
-          else g_pwm=$(( 25 + (g_temp - 40) * 75 / 40 )); fi
+          # Zone 0 (GPUs): 50C->25%, 80C->100% (knee at 50C ignores warm idle)
+          if [ "$g_temp" -le 50 ]; then g_pwm=25; elif [ "$g_temp" -ge 80 ]; then g_pwm=100
+          else g_pwm=$(( 25 + (g_temp - 50) * 75 / 30 )); fi
 
           # Re-apply and log only when PWM duty cycle actually changes
           if [ "$c_pwm" != "$last_c" ]; then

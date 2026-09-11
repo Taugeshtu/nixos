@@ -28,7 +28,7 @@ The BMC firmware has no visibility into PCIe GPU temperatures. A systemd daemon 
 4. **Zone 0 (GPU Curve)**:
    - Reads: Tesla V100 (`nvidia-smi`) and Radeon VII (`/sys/bus/pci/devices/0000:c3:00.0/hwmon/.../temp1_input`).
    - Control Temp: max(Temp_V100, Temp_VII).
-   - Curve: 25% PWM @ <= 40°C -> 100% PWM @ >= 80°C (linear).
+   - Curve: 25% PWM @ <= 50°C -> 100% PWM @ >= 80°C (linear, immune to warm idle).
    - Target: `FAN2` (blower), `FAN3`, `FAN4` (case PCIe intakes).
 5. **Change-Triggered Logging**: Only sends raw IPMI commands and logs timestamped entries to systemd journal when PWM duty cycle actually changes (zero I2C register spamming).
 6. **Failsafe**: On service stop, resets BMC to Standard Auto (`0x00`) so fans never stall.
