@@ -5,6 +5,13 @@
 let
   strikefacePkg = inputs.strikeface.packages.${pkgs.system}.default;
 
+  # Kiosk dashboard config: share tau's foot and htop styling
+  kioskConfigDir = pkgs.runCommand "kiosk-config" {} ''
+    mkdir -p $out/foot $out/htop
+    cp ${../../modules/desktop/niri/config/foot/foot.ini} $out/foot/foot.ini
+    cp ${../../modules/desktop/niri/config/htop/htoprc} $out/htop/htoprc
+  '';
+
   # Lock script: switches DP-5 back to strikeface on workspace 1
   towerLock = pkgs.writeShellScriptBin "tower-lock" ''
     set -euo pipefail
@@ -91,8 +98,8 @@ let
     for_window [app_id="(?i).*niri.*"] move to workspace 2, fullscreen enable, shortcuts_inhibitor enable
     for_window [app_id="(?i).*moonlight.*"] move to workspace 3, fullscreen enable, shortcuts_inhibitor enable
 
-    # Launch dashboard on Monitor 1 (vertical, DP-4)
-    exec ${pkgs.foot}/bin/foot --app-id=kiosk-dashboard ${pkgs.htop}/bin/htop
+    # Launch dashboard on Monitor 1 (vertical, DP-4) with tau's foot & htop theme
+    exec ${pkgs.coreutils}/bin/env XDG_CONFIG_HOME=${kioskConfigDir} ${pkgs.foot}/bin/foot --app-id=kiosk-dashboard ${pkgs.htop}/bin/htop
 
     # Launch strikeface in foot on Monitor 2 (horizontal, DP-5)
     exec ${pkgs.foot}/bin/foot --app-id=greeter-term --override=pad=30x30 /run/wrappers/bin/strikeface --user tau --loop --session ${towerSession}/bin/tower-session
@@ -174,7 +181,7 @@ in
         spawn-at-startup "swayidle" "-w"
 
         binds {
-            Mod+L hotkey-overlay-title="[Lock]" { spawn "${towerLock}/bin/tower-lock"; }
+            Mod+L repeat=false cooldown-ms=500 hotkey-overlay-title="[Lock]" { spawn "${towerLock}/bin/tower-lock"; }
         }
       '';
     };
