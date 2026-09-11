@@ -25,7 +25,7 @@ let
 
     # 3. Switch DP-5 to workspace 2 (work)
     if [ -S /run/kiosk-control/sway-ipc.sock ]; then
-      ${pkgs.sway}/bin/swaymsg -s /run/kiosk-control/sway-ipc.sock "focus output DP-5; workspace 2; [app_id=(?i).*niri.*] focus" || true
+      ${pkgs.sway}/bin/swaymsg -s /run/kiosk-control/sway-ipc.sock "focus output DP-5; workspace 2" || true
     fi
   '';
 
