@@ -62,7 +62,7 @@
   security.sudo.wheelNeedsPassword = true;
   users.users.tau.openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILKQ22iMgAGp9asehvJgjeK2iG1wUKN0D36S7E4r7H2D tau@codex"
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDmTvoN2wKMIqhv+5aMqDCcnpQVJ5o5Jpf/ysJ9fMtWD tau@slate"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIkXksgamSnZegcumbYdXfwcjd36h/JmtJjvv7/drZQH tau@slate"
   ];
   networking.firewall.allowedTCPPorts = [ 22 ];
 

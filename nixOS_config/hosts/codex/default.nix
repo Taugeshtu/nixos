@@ -59,12 +59,24 @@
   security.polkit.enable = true;
   security.sudo.wheelNeedsPassword = true;
   users.users.tau.openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDmTvoN2wKMIqhv+5aMqDCcnpQVJ5o5Jpf/ysJ9fMtWD tau@slate"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIkXksgamSnZegcumbYdXfwcjd36h/JmtJjvv7/drZQH tau@slate"
   ];
 
   # --- System Services ---
   services.power-profiles-daemon.enable = true;
   systemd.services.nix-daemon.environment.TMPDIR = "/cache/tmp";
+
+  # --- Streaming & Remote Display (Sunshine Host & Moonlight Client) ---
+  users.users.tau.linger = true;
+  services.sunshine = {
+    enable = true;
+    autoStart = true;
+    capSysAdmin = true;
+    openFirewall = true;
+  };
+  environment.systemPackages = with pkgs; [
+    moonlight-qt
+  ];
 
   # --- Home Manager Integration ---
   home-manager.useGlobalPkgs = true;
