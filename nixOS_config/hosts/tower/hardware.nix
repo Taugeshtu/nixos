@@ -8,10 +8,12 @@
 
   # --- Boot modules ---
   boot.initrd.availableKernelModules = [
-    "xhci_pci" "nvme" "ahci" "usb_storage" "uas" "sd_mod" "usbhid"
+    "xhci_pci" "nvme" "ahci" "usb_storage" "uas" "sd_mod" "usbhid" "raid0" "xfs"
   ];
   boot.initrd.kernelModules = [ "amdgpu" ]; # early KMS for console / Plymouth
   boot.kernelModules = [ "kvm-amd" "uinput" ];
+  boot.swraid.enable = true;
+  boot.swraid.mdadmConf = "MAILADDR root";
 
   # --- Hardware Udev & Permissions ---
   hardware.uinput.enable = true;

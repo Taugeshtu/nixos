@@ -47,8 +47,27 @@ let
       ${pkgs.coreutils}/bin/chown tau:users /home/tau
     fi
 
-    # 3. Mount /cache subvolume
-    if ! ${pkgs.util-linux}/bin/mountpoint -q /cache; then
+    # 3. Mount /cache: prefer Quad-NVMe Silly Cache, fallback to Vault @cache subvolume
+    SILLY_DEV="/dev/md/silly_cache"
+    if [ ! -e "$SILLY_DEV" ]; then
+      for cand in /dev/md/*silly_cache* /dev/md0 /dev/md127; do
+        if [ -e "$cand" ]; then SILLY_DEV="$cand"; break; fi
+      done
+    fi
+    SILLY_MAPPER="/dev/mapper/silly_cache"
+    SILLY_KEY="/home/tau/.secrets/silly_cache.key"
+
+    if [ -e "$SILLY_DEV" ] && [ -f "$SILLY_KEY" ]; then
+      if [ ! -e "$SILLY_MAPPER" ]; then
+        echo "=== Opening Silly Cache LUKS ==="
+        ${pkgs.cryptsetup}/bin/cryptsetup open "$SILLY_DEV" silly_cache --key-file "$SILLY_KEY"
+      fi
+      if ! ${pkgs.util-linux}/bin/mountpoint -q /cache; then
+        ${pkgs.coreutils}/bin/mkdir -p /cache
+        ${pkgs.util-linux}/bin/mount -t xfs "$SILLY_MAPPER" /cache
+        ${pkgs.coreutils}/bin/chown tau:users /cache
+      fi
+    elif ! ${pkgs.util-linux}/bin/mountpoint -q /cache; then
       ${pkgs.coreutils}/bin/mkdir -p /cache
       ${pkgs.util-linux}/bin/mount -t btrfs -o subvol=@cache,compress=zstd "$MAPPER" /cache
       ${pkgs.coreutils}/bin/chown tau:users /cache
@@ -57,7 +76,7 @@ let
     # 4. Ensure /cache/tmp exists and is accessible to nixbld
     ${pkgs.coreutils}/bin/mkdir -p /cache/tmp
     ${pkgs.coreutils}/bin/chmod 1777 /cache/tmp
-    if ! ${pkgs.util-linux}/bin/findmnt -M /tmp | ${pkgs.gnugrep}/bin/grep -q '/cache/tmp'; then
+    if ! ${pkgs.util-linux}/bin/findmnt -M /tmp | ${pkgs.gnugrep}/bin/grep -qE '(@cache/tmp|/cache/tmp|silly_cache)'; then
       ${pkgs.util-linux}/bin/mount --bind /cache/tmp /tmp
     fi
 
@@ -85,6 +104,8 @@ in
     pkgs.util-linux
     pkgs.coreutils
     pkgs.mergerfs
+    pkgs.mdadm
+    pkgs.xfsprogs
     unlockScript
   ];
 
