@@ -105,7 +105,11 @@
         nativeBuildInputs = prev.lib.filter (
           p: !(prev.lib.hasInfix "node" (p.name or "")) && !(prev.lib.hasInfix "npm" (p.name or ""))
         ) (old.nativeBuildInputs or []);
-        cmakeFlags = (old.cmakeFlags or []) ++ [ "-DLLAMA_SERVER_BUILD_FRONTEND=OFF" ];
+        cmakeFlags = (old.cmakeFlags or []) ++ [
+          "-DLLAMA_SERVER_BUILD_FRONTEND=OFF"
+          "-DLLAMA_BUILD_NUMBER=10952"
+        ];
+        preConfigure = "";
         npmDeps = null;
         postPatch = "";
       });
