@@ -29,7 +29,10 @@
   boot.kernelPackages = pkgs.linuxPackages_zen;
   boot.blacklistedKernelModules = [ "pcspkr" ];
   # Rotate framebuffer console 270 deg / 90 counter-clockwise
-  boot.kernelParams = [ "fbcon=rotate:3" ];
+  boot.kernelParams = [
+    "fbcon=rotate:3"
+    "transparent_hugepage=always"
+  ];
 
   # --- Memory & Swap ---
   zramSwap.enable = false;
@@ -85,7 +88,29 @@
 
   # --- Hardware: Supermicro Fan Baseline ---
   boot.kernelModules = [ "ipmi_devintf" "ipmi_si" ];
-  environment.systemPackages = [ pkgs.ipmitool ];
+  environment.systemPackages = [
+    pkgs.ipmitool
+    pkgs.llama-cpp-vulkan
+  ];
+
+  # --- AI Inference: Pin llama.cpp to b10952 (DeepSeek-V4 Vision & Vulkan support) ---
+  nixpkgs.overlays = [
+    (final: prev: {
+      llama-cpp-vulkan = prev.llama-cpp-vulkan.overrideAttrs (old: {
+        version = "b10952";
+        src = fetchTarball {
+          url = "https://github.com/ggml-org/llama.cpp/archive/refs/tags/b10952.tar.gz";
+          sha256 = "sha256-WWXcqOl5Ao++fsUunYQAm9TJRlaodmz79gCEeUgH7rw=";
+        };
+        nativeBuildInputs = prev.lib.filter (
+          p: !(prev.lib.hasInfix "node" (p.name or "")) && !(prev.lib.hasInfix "npm" (p.name or ""))
+        ) (old.nativeBuildInputs or []);
+        cmakeFlags = (old.cmakeFlags or []) ++ [ "-DLLAMA_SERVER_BUILD_FRONTEND=OFF" ];
+        npmDeps = null;
+        postPatch = "";
+      });
+    })
+  ];
   systemd.services.supermicro-fan-control = {
     description = "Dynamic Dual-Zone Fan Control (CPU Zone 1, GPU Zone 0)";
     wantedBy = [ "multi-user.target" ];
