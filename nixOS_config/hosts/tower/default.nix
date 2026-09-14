@@ -5,6 +5,7 @@
     ./hardware.nix
     ./unlock.nix
     ./kiosk.nix
+    ./model-serving.nix
     ../../modules/core/base.nix
     ../../modules/core/mesh.nix
     ../../modules/core/users.nix
