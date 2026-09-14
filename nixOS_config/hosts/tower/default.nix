@@ -32,12 +32,7 @@
   boot.kernelParams = [ "fbcon=rotate:3" ];
 
   # --- Memory & Swap ---
-  zramSwap = {
-    enable = true;
-    algorithm = "zstd";
-    memoryPercent = 100;
-    priority = 100;
-  };
+  zramSwap.enable = false;
 
   # --- Bootloader ---
   boot.loader.systemd-boot.enable = true;

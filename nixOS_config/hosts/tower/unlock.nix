@@ -86,10 +86,15 @@ let
       ${pkgs.mergerfs}/bin/mergerfs -o defaults,allow_other,cache.files=off,dropcacheonclose=false,func.getattr=newest,category.create=epff,uid=1000,gid=100 /home/tau/.source-dirs/K:/home/tau/.bigK /home/tau/K
     fi
 
-    # 6. Activate encrypted disk swap if present
-    if [ -f /cache/swapfile ]; then
-      ${pkgs.util-linux}/bin/swapon --priority 10 /cache/swapfile 2>/dev/null || true
+    # 6. Ensure and activate encrypted disk swap (32G)
+    if [ ! -f /cache/swapfile ]; then
+      echo "=== Creating 32G swapfile on /cache ==="
+      ${pkgs.util-linux}/bin/fallocate -l 32G /cache/swapfile 2>/dev/null || \
+        ${pkgs.coreutils}/bin/dd if=/dev/zero of=/cache/swapfile bs=1M count=32768 status=none
+      ${pkgs.coreutils}/bin/chmod 600 /cache/swapfile
+      ${pkgs.util-linux}/bin/mkswap /cache/swapfile
     fi
+    ${pkgs.util-linux}/bin/swapon --priority 10 /cache/swapfile 2>/dev/null || true
 
     echo "=== Vault unlocked and mounted successfully ==="
 
