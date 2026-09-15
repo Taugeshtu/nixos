@@ -33,11 +33,41 @@
     };
   };
 
+  # Swift-Qwen3.8-27B (Q6_K) active primary workhorse on V100
   systemd.services.llama-qwen = {
-    description = "Llama.cpp Server - Qwen 3.8 27B (Workhorse)";
+    description = "Llama.cpp Server - Swift-Qwen 3.8 27B Q6_K (Workhorse)";
     after = [ "network.target" "nvidia-persistenced.service" ];
     wants = [ "nvidia-persistenced.service" ];
     wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "simple";
+      User = "tau";
+      Group = "users";
+      Restart = "on-failure";
+      RestartSec = "10s";
+      ExecStart = "${pkgs.llama-cpp-vulkan}/bin/llama-server " + lib.escapeShellArgs [
+        "-m" "/cache/models/swift-qwen3.8-27b/ukisai_Swift-Qwen3.8-27b-Q6_K.gguf"
+        "--mmproj" "/cache/models/swift-qwen3.8-27b/mmproj-ukisai_Swift-Qwen3.8-27b-bf16.gguf"
+        "--host" "0.0.0.0"
+        "--port" "8081"
+        "-dev" "Vulkan1"
+        "-ngl" "99"
+        "-c" "65536"
+        "-ctk" "q4_0"
+        "-ctv" "q4_0"
+        "-t" "24"
+        "--no-warmup"
+        "--alias" "qwen"
+      ];
+    };
+  };
+
+  # Original Qwen 3.8 27B (Q5_K_XL) - dormant backup
+  systemd.services.llama-qwen-og = {
+    description = "Llama.cpp Server - Original Qwen 3.8 27B Q5_K_XL (Dormant Backup)";
+    after = [ "network.target" "nvidia-persistenced.service" ];
+    wants = [ "nvidia-persistenced.service" ];
 
     serviceConfig = {
       Type = "simple";
@@ -54,7 +84,7 @@
         "-c" "8192"
         "-t" "24"
         "--no-warmup"
-        "--alias" "qwen"
+        "--alias" "qwen-og"
       ];
     };
   };
