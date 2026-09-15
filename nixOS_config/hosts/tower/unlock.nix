@@ -101,6 +101,10 @@ let
     # 7. Start tau's headless niri & sunshine
     echo "Starting headless niri session for tau..."
     ${pkgs.systemd}/bin/systemctl --user -M tau@ start niri.service || true
+
+    # 8. Start local LLM serving services once /cache is unlocked
+    echo "Starting model serving services (DeepSeek on :8080, Swift-Qwen on :8081)..."
+    ${pkgs.systemd}/bin/systemctl start llama-deepseek.service llama-qwen.service || true
   '';
 in
 {

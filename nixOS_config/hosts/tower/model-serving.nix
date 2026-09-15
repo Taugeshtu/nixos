@@ -4,7 +4,9 @@
   systemd.services.llama-deepseek = {
     description = "Llama.cpp Server - DeepSeek V4 Flash Vision (Consultant)";
     after = [ "network.target" ];
-    wantedBy = [ "multi-user.target" ];
+    unitConfig = {
+      ConditionPathExists = "/cache/models";
+    };
 
     serviceConfig = {
       Type = "simple";
@@ -38,7 +40,9 @@
     description = "Llama.cpp Server - Swift-Qwen 3.8 27B Q6_K (Workhorse)";
     after = [ "network.target" "nvidia-persistenced.service" ];
     wants = [ "nvidia-persistenced.service" ];
-    wantedBy = [ "multi-user.target" ];
+    unitConfig = {
+      ConditionPathExists = "/cache/models";
+    };
 
     serviceConfig = {
       Type = "simple";
@@ -68,6 +72,9 @@
     description = "Llama.cpp Server - Original Qwen 3.8 27B Q5_K_XL (Dormant Backup)";
     after = [ "network.target" "nvidia-persistenced.service" ];
     wants = [ "nvidia-persistenced.service" ];
+    unitConfig = {
+      ConditionPathExists = "/cache/models";
+    };
 
     serviceConfig = {
       Type = "simple";
