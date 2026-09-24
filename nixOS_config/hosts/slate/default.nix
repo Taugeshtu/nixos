@@ -45,6 +45,7 @@
     wvkbd
     libcamera
     rot8
+    moonlight-qt
   ];
 
   # --- IPU3 Libcamera Tuning & Calibration ---
@@ -65,6 +66,15 @@
 
   # --- System Services ---
   services.power-profiles-daemon.enable = true;
+
+  # --- Streaming & Remote Display (Sunshine Host & Moonlight Client) ---
+  users.users.tau.linger = true;
+  services.sunshine = {
+    enable = true;
+    autoStart = true;
+    capSysAdmin = true;
+    openFirewall = true;
+  };
 
   # --- Home Manager Integration ---
   home-manager.useGlobalPkgs = true;
