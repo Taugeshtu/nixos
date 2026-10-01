@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# current-grass — Launch or focus Grass cognition TUI anchored to active attention
+
+XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+SOCK="$XDG_RUNTIME_DIR/current.sock"
+
+if [ ! -S "$SOCK" ]; then
+    notify-send "Current daemon not running"
+    exit 1
+fi
+
+CONTEXT=$(echo '{"type":"Query"}' | nc -w 1 -U "$SOCK" 2>/dev/null)
+ATT_FILE=$(echo "$CONTEXT" | jq -r '.attention.file // empty' 2>/dev/null)
+ATT_FOLDER=$(echo "$CONTEXT" | jq -r '.attention.folder // empty' 2>/dev/null)
+
+TARGET=""
+
+if [ -n "$ATT_FILE" ] && [ -f "$ATT_FILE" ]; then
+    TARGET="$ATT_FILE"
+elif [ -n "$ATT_FOLDER" ] && [ -d "$ATT_FOLDER" ]; then
+    DIR="$ATT_FOLDER"
+    NUM=1
+    while [ -e "$DIR/$(printf "session_%03d.ass" "$NUM")" ]; do
+        NUM=$((NUM + 1))
+    done
+    TARGET="$DIR/$(printf "session_%03d.ass" "$NUM")"
+    touch "$TARGET"
+    lite-xl "$TARGET" &
+else
+    notify-send "No active context for Grass"
+    exit 0
+fi
+
+# Singleton check: focus existing Grass window if already open for this target
+TITLE="grass: $TARGET"
+EXISTING_ID=$(niri msg --json windows 2>/dev/null | jq -r --arg title "$TITLE" '.[] | select(.title == $title) | .id' | head -n 1)
+
+if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "null" ]; then
+    niri msg action focus-window --id "$EXISTING_ID"
+else
+    exec foot -a grass -T "$TITLE" grass "$TARGET"
+fi

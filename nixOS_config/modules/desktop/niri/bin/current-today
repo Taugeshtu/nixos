@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+LOC=$(current location 2>/dev/null)
+
+if [ -n "$LOC" ] && [ -d "$LOC" ] && [ "$LOC" != "$HOME" ]; then
+    exec to-day "$LOC"
+else
+    exec to-day
+fi

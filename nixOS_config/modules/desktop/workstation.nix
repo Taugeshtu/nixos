@@ -12,6 +12,7 @@
       blender
       audacity
       unityhub
+      kdePackages.kdenlive
     ];
   };
 }

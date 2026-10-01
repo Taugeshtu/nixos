@@ -16,6 +16,26 @@
         "type": "github"
       }
     },
+    "current": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1790868377,
+        "narHash": "sha256-cTRNOQoG8O5q9j9xTFH/qp44MhYueMJvWSvOMl/9bwA=",
+        "owner": "Taugeshtu",
+        "repo": "Current",
+        "rev": "6e87e0111e2a5de8aa20966c9ae2a35413183a20",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Taugeshtu",
+        "repo": "Current",
+        "type": "github"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -123,6 +143,7 @@
     "root": {
       "inputs": {
         "bt-ghost-note": "bt-ghost-note",
+        "current": "current",
         "disko": "disko",
         "home-manager": "home-manager",
         "imv-dir-respect": "imv-dir-respect",

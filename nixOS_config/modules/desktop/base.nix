@@ -104,6 +104,7 @@ in
     # Core helper scripts
     home.file.".local/bin/niri-launcher" = { source = ./niri/bin/niri-launcher; executable = true; };
     home.file.".local/bin/smart-terminal" = { source = ./niri/bin/smart-terminal; executable = true; };
+    home.file.".local/bin/current-terminal" = { source = ./niri/bin/current-terminal; executable = true; };
     home.file.".local/bin/niri-navigate" = { source = ./niri/bin/niri-navigate; executable = true; };
     home.file.".local/bin/niri-zen" = { source = ./niri/bin/niri-zen; executable = true; };
     home.file.".local/bin/foot-on-path" = { source = ./niri/bin/foot-on-path; executable = true; };

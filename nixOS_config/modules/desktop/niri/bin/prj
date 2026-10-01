@@ -1,0 +1,153 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROJECTS_DIR="/home/tau/10_PROJECTS"
+ARCHIVE_DIR="10_PROJECTS/_archive"
+TOWER_HOST="Tower"
+
+usage() {
+    echo "Usage: prj activate <NAME>"
+    echo "       prj deactivate [NAME]"
+    exit 1
+}
+
+check_tower() {
+    if ! ssh -o BatchMode=yes -o ConnectTimeout=3 "$TOWER_HOST" true 2>/dev/null; then
+        echo "Error: Tower is unreachable via SSH." >&2
+        exit 1
+    fi
+}
+
+cmd="${1:-}"
+case "$cmd" in
+    activate)
+        name="${2:-}"
+        if [ -z "$name" ] || [ "$name" = "_archive" ] || [[ "$name" == *"/"* ]]; then
+            echo "Error: valid project name required for activate." >&2
+            exit 1
+        fi
+
+        check_tower
+
+        local_path="$PROJECTS_DIR/$name"
+        if [ -e "$local_path" ]; then
+            echo "Error: local project already exists at $local_path" >&2
+            exit 1
+        fi
+
+        if ! ssh "$TOWER_HOST" "test -d '$ARCHIVE_DIR/$name'"; then
+            echo "Error: $ARCHIVE_DIR/$name does not exist on $TOWER_HOST" >&2
+            exit 1
+        fi
+
+        if ssh "$TOWER_HOST" "test -e '10_PROJECTS/$name'"; then
+            echo "Error: 10_PROJECTS/$name already exists on $TOWER_HOST (collision)" >&2
+            exit 1
+        fi
+
+        echo "==> Moving $name out of archive on $TOWER_HOST..."
+        ssh "$TOWER_HOST" "mv '$ARCHIVE_DIR/$name' '10_PROJECTS/$name'"
+
+        echo "==> Creating local directory $local_path..."
+        mkdir -p "$local_path"
+
+        session="prj-${name//_/-}"
+        echo "==> Creating Mutagen sync session $session..."
+        mutagen sync create --name="$session" --label="project=$name" "$local_path" "$TOWER_HOST:10_PROJECTS/$name"
+
+        echo "==> Flushing initial sync..."
+        mutagen sync flush "$session"
+
+        echo "==> Project $name activated successfully."
+        ;;
+
+    deactivate)
+        name="${2:-}"
+        if [ -z "$name" ]; then
+            cwd="$(pwd -P)"
+            if [[ "$cwd" == "$PROJECTS_DIR/"* ]]; then
+                rel="${cwd#"$PROJECTS_DIR/"}"
+                name="${rel%%/*}"
+            fi
+        fi
+
+        if [ -z "$name" ] || [ "$name" = "_archive" ] || [[ "$name" == *"/"* ]]; then
+            echo "Error: valid project name required for deactivate." >&2
+            exit 1
+        fi
+
+        local_path="$PROJECTS_DIR/$name"
+        if [ ! -d "$local_path" ]; then
+            echo "Error: local directory $local_path not found." >&2
+            exit 1
+        fi
+
+        check_tower
+
+        if ssh "$TOWER_HOST" "test -e '$ARCHIVE_DIR/$name'"; then
+            echo "Error: target $ARCHIVE_DIR/$name already exists on $TOWER_HOST (collision)" >&2
+            exit 1
+        fi
+
+        session="prj-${name//_/-}"
+        if mutagen sync list "$session" >/dev/null 2>&1; then
+            echo "==> Flushing Mutagen session $session..."
+            if ! mutagen sync flush "$session"; then
+                echo "Error: Mutagen flush failed or has conflicts. Aborting deactivate." >&2
+                exit 1
+            fi
+            echo "==> Terminating Mutagen session $session..."
+            mutagen sync terminate "$session"
+        else
+            echo "==> No active Mutagen session ($session). Syncing to $TOWER_HOST via rsync..."
+            rsync -avz --delete "$local_path/" "$TOWER_HOST:10_PROJECTS/$name/"
+        fi
+
+        echo "==> Moving $name to archive on $TOWER_HOST..."
+        ssh "$TOWER_HOST" "mv '10_PROJECTS/$name' '$ARCHIVE_DIR/$name'"
+
+        echo "==> Removing local copy $local_path..."
+        cd "$PROJECTS_DIR"
+        if [[ "$local_path" == "$PROJECTS_DIR/"* ]] && [ -n "$name" ]; then
+            rm -rf "$local_path"
+        fi
+
+        echo "==> Project $name deactivated and archived on $TOWER_HOST."
+        ;;
+
+    thunar-deactivate)
+        target="${2:-}"
+        dir="$(dirname "$target")"
+        base="$(basename "$target")"
+        if [ "$dir" != "$PROJECTS_DIR" ]; then
+            echo "Error: deactivate only works on projects directly in $PROJECTS_DIR"
+            echo "Target was: $target"
+            echo
+            read -p "Press Enter to exit..."
+            exit 1
+        fi
+        "$0" deactivate "$base"
+        echo
+        read -p "Press Enter to exit..."
+        ;;
+
+    thunar-activate)
+        target="${2:-}"
+        dir="$(dirname "$target")"
+        base="$(basename "$target")"
+        if [ "$dir" != "$PROJECTS_DIR/_archive" ]; then
+            echo "Error: activate only works on projects in $PROJECTS_DIR/_archive"
+            echo "Target was: $target"
+            echo
+            read -p "Press Enter to exit..."
+            exit 1
+        fi
+        "$0" activate "$base"
+        echo
+        read -p "Press Enter to exit..."
+        ;;
+
+    *)
+        usage
+        ;;
+esac

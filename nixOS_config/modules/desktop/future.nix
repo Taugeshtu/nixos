@@ -31,8 +31,45 @@ let
       ls -la $out/bin/
     '';
   };
+
+  currentPkg = inputs.current.packages.${pkgs.system}.default;
 in
 {
+  nixpkgs.overlays = [
+    (final: prev: let
+      wrapThunar = base: (prev.symlinkJoin {
+        name = "thunar-wrapped-current-${base.version}";
+        paths = [ base ];
+        nativeBuildInputs = [ prev.makeWrapper ];
+        postBuild = ''
+          wrapProgram "$out/bin/thunar" \
+            --prefix LD_PRELOAD : "${currentPkg}/lib/libthunar-current.so"
+
+          rm -rf "$out/lib/systemd/user"
+          mkdir -p "$out/lib/systemd/user"
+
+          for file in "lib/systemd/user/thunar.service" \
+            "share/dbus-1/services/org.xfce.FileManager.service" \
+            "share/dbus-1/services/org.xfce.Thunar.FileManager1.service" \
+            "share/dbus-1/services/org.xfce.Thunar.service"
+          do
+            if [ -f "${base}/$file" ]; then
+              rm -f "$out/$file"
+              mkdir -p "$(dirname "$out/$file")"
+              substitute "${base}/$file" "$out/$file" \
+                --replace-warn "${base}" "$out"
+            fi
+          done
+        '';
+      }) // (prev.lib.optionalAttrs (base ? dev) { inherit (base) dev; });
+      wrapped = wrapThunar prev.thunar;
+    in {
+      thunar = wrapped // {
+        override = args: wrapThunar (prev.thunar.override args);
+      };
+    })
+  ];
+
   home-manager.users.tau = { ... }: {
     # Future dotfiles & configs
     xdg.configFile."purse".source = ./niri/config/purse;
@@ -49,6 +86,9 @@ in
     # Future helper scripts
     home.file.".local/bin/touch-edge-glide" = { source = ./niri/bin/touch-edge-glide; executable = true; };
     home.file.".local/bin/smart-today" = { source = ./niri/bin/smart-today; executable = true; };
+    home.file.".local/bin/current-today" = { source = ./niri/bin/current-today; executable = true; };
+    home.file.".local/bin/current-grass" = { source = ./niri/bin/current-grass; executable = true; };
+    home.file.".local/bin/prj" = { source = ./niri/bin/prj; executable = true; };
     home.file.".local/bin/purse-defs-smart" = { source = ./niri/bin/purse-defs-smart; executable = true; };
     home.file.".local/bin/purse-refs-smart" = { source = ./niri/bin/purse-refs-smart; executable = true; };
     home.file.".local/bin/purse-defs.sh" = { source = ./niri/bin/purse-defs.sh; executable = true; };
@@ -113,7 +153,7 @@ in
       };
       Service = {
         Type = "simple";
-        ExecStart = "%h/.local/bin/current --daemon";
+        ExecStart = "${currentPkg}/bin/current --daemon";
         Restart = "on-failure";
         RestartSec = 2;
       };
@@ -125,6 +165,7 @@ in
     # Packages
     home.packages = with pkgs; [
       todayPkg
+      currentPkg
       libinput-gestures
       ydotool
       wtype

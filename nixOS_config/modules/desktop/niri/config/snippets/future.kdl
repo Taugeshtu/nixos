@@ -1,7 +1,6 @@
 spawn-at-startup "libinput-gestures"
 
 binds {
-    Alt+N hotkey-overlay-title="[TO-DAY]" { spawn "smart-today"; }
     Alt+Return hotkey-overlay-title="[References]" { spawn "purse-refs-smart"; }
     Ctrl+Return hotkey-overlay-title="[Definitions]" { spawn "purse-defs-smart"; }
 }

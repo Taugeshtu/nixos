@@ -1,9 +1,9 @@
 binds {
     Mod+F1 hotkey-overlay-title="[Manual]" { show-hotkey-overlay; }
 
-    // Suggested binds for running programs: terminal, app launcher, screen locker.
-    //Mod+T hotkey-overlay-title="[Terminal]" { spawn-sh "smart-terminal"; }
-    Alt+T hotkey-overlay-title="[Terminal]" { spawn-sh "smart-terminal"; }
+    Mod+T hotkey-overlay-title="[Terminal]" { spawn "current-terminal"; }
+    Mod+N hotkey-overlay-title="[TO-DAY]" { spawn "current-today"; }
+    Mod+C hotkey-overlay-title="[Clanker]" { spawn "current-grass"; }
     Mod+S hotkey-overlay-title="[Start]" { spawn "niri-launcher"; }
     Mod+Z hotkey-overlay-title="-= zen =-" { spawn "niri-zen"; }
     Mod+Q repeat=false hotkey-overlay-title="overview" { toggle-overview; }

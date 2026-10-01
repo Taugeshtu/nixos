@@ -101,4 +101,28 @@
 	<image-files/>
 	<video-files/>
 </action>
+<action>
+	<icon>Archive</icon>
+	<name>Project: Deactivate</name>
+	<submenu></submenu>
+	<unique-id>1775900000000001-1</unique-id>
+	<command>foot --title &quot;prj: deactivate %n&quot; prj thunar-deactivate %f</command>
+	<description>Deactivate active project and archive to Tower</description>
+	<range>*</range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+</action>
+<action>
+	<icon>utilities-terminal</icon>
+	<name>Project: Activate</name>
+	<submenu></submenu>
+	<unique-id>1776000000000001-1</unique-id>
+	<command>foot --title &quot;prj: activate %n&quot; prj thunar-activate %f</command>
+	<description>Activate archived project and start sync on Codex</description>
+	<range>*</range>
+	<patterns>*</patterns>
+	<startup-notify/>
+	<directories/>
+</action>
 </actions>

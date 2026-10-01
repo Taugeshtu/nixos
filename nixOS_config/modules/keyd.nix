@@ -35,8 +35,6 @@
           };
           "meta:M" = {
             "leftshift+s" = "print";
-            t = "clearm(A-t)";
-            n = "clearm(A-n)";
           };
           "rightalt:A" = {};
         };
