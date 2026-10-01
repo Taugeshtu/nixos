@@ -70,7 +70,7 @@
     android-tools
     sops age ssh-to-age
     mergerfs
-    mutagen uv chafa veracrypt
+    mutagen uv chafa veracrypt rclone
   ];
   environment.variables.EDITOR = "micro";
 

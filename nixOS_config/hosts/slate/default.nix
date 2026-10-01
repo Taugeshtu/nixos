@@ -76,6 +76,27 @@
     openFirewall = true;
   };
 
+  # --- VFS Mounts from Codex ---
+  systemd.user.services = let
+    mkRcloneMount = remote: mount: {
+      description = "Rclone VFS mount for ${remote} to ${mount}";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+      wantedBy = [ "default.target" ];
+      serviceConfig = {
+        Type = "simple";
+        ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p %h/${mount}";
+        ExecStart = "${pkgs.rclone}/bin/rclone mount ${remote} %h/${mount} --vfs-cache-mode full --vfs-cache-max-size 10G --vfs-cache-max-age 48h --dir-cache-time 30m";
+        ExecStop = "${pkgs.fuse}/bin/fusermount -u %h/${mount}";
+        Restart = "on-failure";
+        RestartSec = "10s";
+      };
+    };
+  in {
+    rclone-mount-k = mkRcloneMount "codex:K" "K";
+    rclone-mount-p = mkRcloneMount "codex:P" "P";
+  };
+
   # --- Home Manager Integration ---
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
