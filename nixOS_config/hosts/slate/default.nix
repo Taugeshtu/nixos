@@ -10,6 +10,7 @@
     ../../modules/keyd.nix
     ../../modules/desktop/base.nix
     ../../modules/desktop/theme.nix
+    ../../modules/desktop/future.nix
     ../../modules/flatpaks/base.nix
     ../../modules/flatpaks/everyday.nix
     ../../modules/flatpaks/communications.nix
