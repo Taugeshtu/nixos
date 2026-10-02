@@ -70,7 +70,7 @@
     android-tools
     sops age ssh-to-age
     mergerfs
-    mutagen uv chafa veracrypt rclone systemctl-tui
+    mutagen uv chafa veracrypt rclone systemctl-tui borgbackup
   ];
   environment.variables.EDITOR = "micro";
 
