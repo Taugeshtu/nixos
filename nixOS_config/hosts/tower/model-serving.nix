@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, lib, inputs, ... }:
 
 {
   systemd.services.llama-deepseek = {
@@ -35,9 +35,42 @@
     };
   };
 
-  # Swift-Qwen3.8-27B (Q6_K) active primary workhorse on V100
+  # Swift-Qwen3.8-27B (NVFP4) sm_70 NInfer Engine - high-throughput workhorse on V100
+  systemd.services.ninfer-qwen = {
+    description = "NInfer Server - Swift-Qwen 3.8 27B NVFP4 (sm_70 Workhorse)";
+    after = [ "network.target" "nvidia-persistenced.service" ];
+    wants = [ "nvidia-persistenced.service" ];
+    unitConfig = {
+      ConditionPathExists = "/cache/models/swift-qwen3.8-27b-nvfp4.v2.ninfer";
+    };
+
+    serviceConfig = {
+      Type = "simple";
+      User = "tau";
+      Group = "users";
+      Restart = "on-failure";
+      RestartSec = "10s";
+      Environment = [
+        "LD_LIBRARY_PATH=/run/opengl-driver/lib"
+      ];
+      ExecStart = "${inputs.ninfer.packages.${pkgs.system}.ninfer}/bin/ninfer-serve " + lib.escapeShellArgs [
+        "/cache/models/swift-qwen3.8-27b-nvfp4.v2.ninfer"
+        "--host" "0.0.0.0"
+        "--port" "8081"
+        "--device" "0"
+        "--spec" "mtp"
+        "--draft-tokens" "5"
+        "--kv-dtype" "int8"
+        "--max-context" "262144"
+        "--kv-capacity" "auto"
+        "--cors"
+      ];
+    };
+  };
+
+  # Swift-Qwen3.8-27B (Q6_K) dormant fallback workhorse on V100
   systemd.services.llama-qwen = {
-    description = "Llama.cpp Server - Swift-Qwen 3.8 27B Q6_K (Workhorse)";
+    description = "Llama.cpp Server - Swift-Qwen 3.8 27B Q6_K (Fallback Workhorse)";
     after = [ "network.target" "nvidia-persistenced.service" ];
     wants = [ "nvidia-persistenced.service" ];
     unitConfig = {
@@ -92,6 +125,36 @@
         "-t" "24"
         "--no-warmup"
         "--alias" "qwen-og"
+      ];
+    };
+  };
+
+  # MiniCPM5-2B (Q4_K_M + DSpark) on Radeon VII - dormant option
+  systemd.services.llama-minicpm = {
+    description = "Llama.cpp Server - MiniCPM5 2B Q4_K_M + DSpark (Dormant Option)";
+    after = [ "network.target" ];
+    unitConfig = {
+      ConditionPathExists = "/cache/models";
+    };
+
+    serviceConfig = {
+      Type = "simple";
+      User = "tau";
+      Group = "users";
+      Restart = "on-failure";
+      RestartSec = "10s";
+      ExecStart = "${pkgs.llama-cpp-vulkan}/bin/llama-server " + lib.escapeShellArgs [
+        "-m" "/cache/models/minicpm5-2b/MiniCPM5-2B-Q4_K_M.gguf"
+        "-md" "/cache/models/minicpm5-2b/MiniCPM5-2.6B-DSpark.gguf"
+        "--spec-type" "draft-dspark"
+        "-dev" "Vulkan0"
+        "-ngl" "99"
+        "-devd" "Vulkan0"
+        "-ngld" "99"
+        "--host" "0.0.0.0"
+        "--port" "8082"
+        "-c" "32768"
+        "--alias" "minicpm"
       ];
     };
   };

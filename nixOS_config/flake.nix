@@ -35,6 +35,10 @@
       url = "github:Taugeshtu/Current";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    ninfer = {
+      url = "github:Taugeshtu/ninfer-v100";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
     nixos-hardware.url = "github:NixOS/nixos-hardware/master";
     disko = {
       url = "github:nix-community/disko";

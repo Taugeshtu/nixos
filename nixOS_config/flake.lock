@@ -36,6 +36,23 @@
         "type": "github"
       }
     },
+    "cutlass-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1773723521,
+        "narHash": "sha256-0q9Ad0Z6E/rO2PdM4uQc8H0E0qs9uKc3reHepiHhjEc=",
+        "owner": "nvidia",
+        "repo": "cutlass",
+        "rev": "da5e086dab31d63815acafdac9a9c5893b1c69e2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nvidia",
+        "ref": "v4.4.2",
+        "repo": "cutlass",
+        "type": "github"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -89,6 +106,27 @@
       "original": {
         "owner": "Taugeshtu",
         "repo": "imv-dir-respect",
+        "type": "github"
+      }
+    },
+    "ninfer": {
+      "inputs": {
+        "cutlass-src": "cutlass-src",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1790092422,
+        "narHash": "sha256-lQ64HwKewXt9dC3qPvoqT5671JeU8VuzlK9M3PrNKFY=",
+        "owner": "Taugeshtu",
+        "repo": "ninfer-v100",
+        "rev": "85ab965d1c8ae34c91fe2066941eb9b437e897dd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Taugeshtu",
+        "repo": "ninfer-v100",
         "type": "github"
       }
     },
@@ -147,6 +185,7 @@
         "disko": "disko",
         "home-manager": "home-manager",
         "imv-dir-respect": "imv-dir-respect",
+        "ninfer": "ninfer",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_2",
         "sops-nix": "sops-nix",
