@@ -78,6 +78,27 @@
     moonlight-qt
   ];
 
+  # --- VFS Mounts from Tower ---
+  systemd.user.services = let
+    mkRcloneMount = remote: mount: {
+      description = "Rclone VFS mount for ${remote} to ${mount}";
+      after = [ "network-online.target" ];
+      wants = [ "network-online.target" ];
+      wantedBy = [ "default.target" ];
+      path = [ "/run/wrappers" pkgs.fuse3 pkgs.fuse pkgs.coreutils ];
+      serviceConfig = {
+        Type = "simple";
+        ExecStartPre = "${pkgs.coreutils}/bin/mkdir -p %h/${mount}";
+        ExecStart = "${pkgs.rclone}/bin/rclone mount ${remote} %h/${mount} --allow-other --vfs-cache-mode full --vfs-cache-max-size 15G --vfs-cache-max-age 48h --dir-cache-time 30m";
+        ExecStop = "/run/wrappers/bin/fusermount3 -u %h/${mount}";
+        Restart = "on-failure";
+        RestartSec = "10s";
+      };
+    };
+  in {
+    rclone-mount-archive = mkRcloneMount "tower:10_PROJECTS/_archive" "10_PROJECTS/_archive";
+  };
+
   # --- Home Manager Integration ---
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;

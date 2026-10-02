@@ -77,7 +77,7 @@
     openFirewall = true;
   };
 
-  # --- VFS Mounts from Codex ---
+  # --- VFS Mounts from Tower ---
   systemd.user.services = let
     mkRcloneMount = remote: mount: {
       description = "Rclone VFS mount for ${remote} to ${mount}";
@@ -95,8 +95,9 @@
       };
     };
   in {
-    rclone-mount-k = mkRcloneMount "codex:K" "K";
-    rclone-mount-p = mkRcloneMount "codex:P" "P";
+    rclone-mount-k = mkRcloneMount "tower:K" "K";
+    rclone-mount-p = mkRcloneMount "tower:P" "P";
+    rclone-mount-archive = mkRcloneMount "tower:10_PROJECTS/_archive" "10_PROJECTS/_archive";
   };
 
   # --- Home Manager Integration ---

@@ -65,5 +65,19 @@
     "CtrlUnderscore" = "lua:comment.comment";
   };
 
+  xdg.configFile."rclone/rclone.conf".text = ''
+    [tower]
+    type = sftp
+    host = tower
+    user = tau
+    known_hosts_file = none
+
+    [codex]
+    type = sftp
+    host = codex
+    user = tau
+    known_hosts_file = none
+  '';
+
   programs.home-manager.enable = true;
 }
