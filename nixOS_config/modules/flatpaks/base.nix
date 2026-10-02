@@ -41,5 +41,26 @@
         RemainAfterExit = true;
       };
     };
+
+    # Ensure document portal recovers if FUSE unmounts or crashes
+    systemd.user.services.xdg-document-portal = {
+      serviceConfig = {
+        Restart = "on-failure";
+        RestartSec = "1s";
+      };
+    };
+
+    # Reconnect document portal on rebuild switch to prevent zombie detached FUSE mounts
+    system.activationScripts.restartXdgDocumentPortal = {
+      supportsDryActivation = true;
+      text = ''
+        for uid_dir in /run/user/*; do
+          if [ -d "$uid_dir" ] && [ -S "$uid_dir/systemd/private" ]; then
+            uid=$(basename "$uid_dir")
+            ${pkgs.systemd}/bin/systemctl --machine="$uid@.host" --user restart xdg-document-portal.service 2>/dev/null || true
+          fi
+        done
+      '';
+    };
   };
 }
