@@ -7,5 +7,6 @@
     "de.haeckerfelix.Fragments"
     "com.github.PintaProject.Pinta"
     "no.mifi.losslesscut"
+    "io.github.efogdev.mpris-timer"
   ];
 }
