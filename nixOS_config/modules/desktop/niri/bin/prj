@@ -4,6 +4,7 @@ set -euo pipefail
 PROJECTS_DIR="/home/tau/10_PROJECTS"
 ARCHIVE_DIR="10_PROJECTS/_archive"
 TOWER_HOST="Tower"
+MUTAGEN_PROJECTS_DIR="/home/tau/.config/mutagen/projects"
 
 usage() {
     echo "Usage: prj activate <NAME>"
@@ -30,33 +31,39 @@ case "$cmd" in
         check_tower
 
         local_path="$PROJECTS_DIR/$name"
-        if [ -e "$local_path" ]; then
-            echo "Error: local project already exists at $local_path" >&2
+        clean_name="$(echo "$name" | sed 's/[^a-zA-Z0-9]/-/g; s/^-*//; s/-*$//')"
+        project_name="prj-${clean_name,,}"
+        project_yaml="$MUTAGEN_PROJECTS_DIR/$project_name.yml"
+
+        if ssh "$TOWER_HOST" "test -d '$ARCHIVE_DIR/$name'"; then
+            if ssh "$TOWER_HOST" "test -e '10_PROJECTS/$name'"; then
+                echo "Error: 10_PROJECTS/$name already exists on $TOWER_HOST (collision)" >&2
+                exit 1
+            fi
+            echo "==> Moving $name out of archive on $TOWER_HOST..."
+            ssh "$TOWER_HOST" "mv '$ARCHIVE_DIR/$name' '10_PROJECTS/$name'"
+        elif ! ssh "$TOWER_HOST" "test -d '10_PROJECTS/$name'"; then
+            echo "Error: $name not found in 10_PROJECTS or $ARCHIVE_DIR on $TOWER_HOST" >&2
             exit 1
         fi
 
-        if ! ssh "$TOWER_HOST" "test -d '$ARCHIVE_DIR/$name'"; then
-            echo "Error: $ARCHIVE_DIR/$name does not exist on $TOWER_HOST" >&2
-            exit 1
-        fi
-
-        if ssh "$TOWER_HOST" "test -e '10_PROJECTS/$name'"; then
-            echo "Error: 10_PROJECTS/$name already exists on $TOWER_HOST (collision)" >&2
-            exit 1
-        fi
-
-        echo "==> Moving $name out of archive on $TOWER_HOST..."
-        ssh "$TOWER_HOST" "mv '$ARCHIVE_DIR/$name' '10_PROJECTS/$name'"
-
-        echo "==> Creating local directory $local_path..."
+        echo "==> Ensuring local directory $local_path..."
         mkdir -p "$local_path"
 
-        session="prj-${name//_/-}"
-        echo "==> Creating Mutagen sync session $session..."
-        mutagen sync create --name="$session" --label="project=$name" "$local_path" "$TOWER_HOST:10_PROJECTS/$name"
+        mkdir -p "$MUTAGEN_PROJECTS_DIR"
+        echo "==> Creating Mutagen project config $project_yaml..."
+        cat <<EOF > "$project_yaml"
+sync:
+  $project_name:
+    alpha: "$local_path"
+    beta: "$TOWER_HOST:10_PROJECTS/$name"
+EOF
+
+        echo "==> Starting Mutagen project $project_name..."
+        mutagen project start -f "$project_yaml"
 
         echo "==> Flushing initial sync..."
-        mutagen sync flush "$session"
+        mutagen project flush -f "$project_yaml" || true
 
         echo "==> Project $name activated successfully."
         ;;
@@ -89,17 +96,21 @@ case "$cmd" in
             exit 1
         fi
 
-        session="prj-${name//_/-}"
-        if mutagen sync list "$session" >/dev/null 2>&1; then
-            echo "==> Flushing Mutagen session $session..."
-            if ! mutagen sync flush "$session"; then
-                echo "Error: Mutagen flush failed or has conflicts. Aborting deactivate." >&2
-                exit 1
-            fi
-            echo "==> Terminating Mutagen session $session..."
-            mutagen sync terminate "$session"
+        clean_name="$(echo "$name" | sed 's/[^a-zA-Z0-9]/-/g; s/^-*//; s/-*$//')"
+        project_name="prj-${clean_name,,}"
+        project_yaml="$MUTAGEN_PROJECTS_DIR/$project_name.yml"
+
+        if [ -f "$project_yaml" ]; then
+            echo "==> Flushing Mutagen project $project_name..."
+            mutagen project flush -f "$project_yaml" || true
+            echo "==> Terminating Mutagen project $project_name..."
+            mutagen project terminate -f "$project_yaml"
+            rm -f "$project_yaml"
+        elif mutagen sync list "$project_name" >/dev/null 2>&1; then
+            echo "==> Terminating loose Mutagen session $project_name..."
+            mutagen sync terminate "$project_name"
         else
-            echo "==> No active Mutagen session ($session). Syncing to $TOWER_HOST via rsync..."
+            echo "==> No active Mutagen session ($project_name). Syncing to $TOWER_HOST via rsync..."
             rsync -avz --delete "$local_path/" "$TOWER_HOST:10_PROJECTS/$name/"
         fi
 
@@ -135,8 +146,8 @@ case "$cmd" in
         target="${2:-}"
         dir="$(dirname "$target")"
         base="$(basename "$target")"
-        if [ "$dir" != "$PROJECTS_DIR/_archive" ]; then
-            echo "Error: activate only works on projects in $PROJECTS_DIR/_archive"
+        if [ "$dir" != "$PROJECTS_DIR/_archive" ] && [ "$dir" != "$PROJECTS_DIR" ]; then
+            echo "Error: activate only works on projects in $PROJECTS_DIR or $PROJECTS_DIR/_archive"
             echo "Target was: $target"
             echo
             read -p "Press Enter to exit..."
