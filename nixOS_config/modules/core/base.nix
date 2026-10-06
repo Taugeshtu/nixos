@@ -71,6 +71,7 @@
     sops age ssh-to-age
     mergerfs
     mutagen uv chafa veracrypt rclone systemctl-tui borgbackup
+    pandoc
   ];
   environment.variables.EDITOR = "micro";
 
