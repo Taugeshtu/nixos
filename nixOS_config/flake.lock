@@ -109,6 +109,26 @@
         "type": "github"
       }
     },
+    "my-system": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791748952,
+        "narHash": "sha256-vazGRp5OlknI4obedXpn5bIikK2X25zaUXEYp8CSeTQ=",
+        "owner": "Taugeshtu",
+        "repo": "my_system",
+        "rev": "88176281c18d473bbfedbd33f4ee65ae96dab02e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Taugeshtu",
+        "repo": "my_system",
+        "type": "github"
+      }
+    },
     "ninfer": {
       "inputs": {
         "cutlass-src": "cutlass-src",
@@ -185,6 +205,7 @@
         "disko": "disko",
         "home-manager": "home-manager",
         "imv-dir-respect": "imv-dir-respect",
+        "my-system": "my-system",
         "ninfer": "ninfer",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_2",

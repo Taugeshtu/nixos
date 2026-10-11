@@ -199,6 +199,7 @@
   home-manager.backupFileExtension = "backup";
   home-manager.sharedModules = [
     inputs.sops-nix.homeManagerModules.sops
+    inputs.my-system.homeManagerModules.default
     ../../modules/security/secrets.nix
   ];
   home-manager.users.tau = { ... }: {
