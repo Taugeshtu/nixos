@@ -72,6 +72,7 @@
     mergerfs
     mutagen uv chafa veracrypt rclone systemctl-tui borgbackup
     pandoc
+    python3Packages.weasyprint
   ];
   environment.variables.EDITOR = "micro";
 

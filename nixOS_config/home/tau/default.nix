@@ -1,6 +1,8 @@
-{ pkgs, ... }:
+{ pkgs, inputs, ... }:
 
 {
+  imports = [ inputs.my-system.homeManagerModules.default ];
+
   home.username = "tau";
   home.homeDirectory = "/home/tau";
   home.stateVersion = "25.05";
