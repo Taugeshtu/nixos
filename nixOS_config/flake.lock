@@ -23,11 +23,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1790868377,
-        "narHash": "sha256-cTRNOQoG8O5q9j9xTFH/qp44MhYueMJvWSvOMl/9bwA=",
+        "lastModified": 1791814841,
+        "narHash": "sha256-2tbY327S4rcXgKcUE69b1G3jzZBO9VITaEWE+kf9avo=",
         "owner": "Taugeshtu",
         "repo": "Current",
-        "rev": "6e87e0111e2a5de8aa20966c9ae2a35413183a20",
+        "rev": "531e9daa1c76c32b5cac9042469d591fd7ef3504",
         "type": "github"
       },
       "original": {
