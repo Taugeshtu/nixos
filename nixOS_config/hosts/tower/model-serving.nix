@@ -24,9 +24,47 @@
         "-dev" "Vulkan0"
         "-ngl" "99"
         "-cmoe"
-        "-c" "8192"
-        "-ctk" "q8_0"
-        "-ctv" "q8_0"
+        "-c" "524288" # 512k context verified with FP16 cache (leaves 1.77GB free on VII > 1.5GB headroom)
+        "-ctk" "f16"
+        "-ctv" "f16"
+        "-nr"
+        "-t" "24"
+        "--cpu-range" "0-23"
+        "--cpu-strict" "1"
+        "--no-warmup"
+        "--alias" "deepseek"
+      ];
+    };
+  };
+
+  # RAM + Tesla V100 (VII 100% Free) - MoE in RAM, Attention on V100, 11.3 t/s generation, FP16 KV cache, 512k-1M context
+  systemd.services.ram_v100-deepseek = {
+    description = "Llama.cpp Server - DeepSeek V4 Flash Vision (RAM + Tesla V100, VII Free)";
+    after = [ "network.target" "nvidia-persistenced.service" ];
+    wants = [ "nvidia-persistenced.service" ];
+    unitConfig = {
+      ConditionPathExists = "/cache/models";
+    };
+
+    serviceConfig = {
+      Type = "simple";
+      User = "tau";
+      Group = "users";
+      Restart = "on-failure";
+      RestartSec = "10s";
+      LimitMEMLOCK = "infinity";
+      MemoryMax = "115G";
+      ExecStart = "${pkgs.llama-cpp-vulkan}/bin/llama-server " + lib.escapeShellArgs [
+        "-m" "/cache/models/dsv4-flash-vision/UD-IQ3_S/DeepSeek-V4-Flash-Vision-Exp-UD-IQ3_S-00001-of-00004.gguf"
+        "--mmproj" "/cache/models/dsv4-flash-vision/mmproj-BF16.gguf"
+        "--host" "0.0.0.0"
+        "--port" "8080"
+        "-dev" "Vulkan1"
+        "-ngl" "99"
+        "-cmoe"
+        "-c" "524288" # 512k context verified at 11.3 t/s with FP16 cache (1M native 1048576 also verified)
+        "-ctk" "f16"
+        "-ctv" "f16"
         "-nr"
         "-t" "24"
         "--cpu-range" "0-23"
