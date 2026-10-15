@@ -33,17 +33,7 @@
   boot.kernelParams = [
     "fbcon=rotate:3"
     "transparent_hugepage=always"
-    "default_hugepagesz=1G"
-    "hugepagesz=1G"
-    "hugepages=107"
   ];
-
-  # Mount 1GB hugetlbfs for zero-TLB LLM model memory mapping
-  fileSystems."/dev/hugepages1G" = {
-    device = "none";
-    fsType = "hugetlbfs";
-    options = [ "pagesize=1G" "uid=1000" "gid=100" "mode=0775" ];
-  };
 
   # --- Memory & Swap ---
   zramSwap.enable = false;
