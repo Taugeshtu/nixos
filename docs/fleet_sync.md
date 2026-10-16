@@ -67,12 +67,16 @@ Project state transitions are orchestrated via the `prj` helper script (declared
        +------------------------------------+
 ```
 
-### Activation (`prj activate <name>`)
-1. **Pre-flight**: Verifies Tower SSH reachability (3s timeout).
-2. **Promotion on Tower**: If project is in `_archive/`, executes remote move `mv 10_PROJECTS/_archive/<name> 10_PROJECTS/<name>`. If already active in `10_PROJECTS/`, preserves existing state without error.
-3. **Local Setup**: Ensures local directory `/home/tau/10_PROJECTS/<name>` exists.
-4. **Declarative Config**: Generates `/home/tau/.config/mutagen/projects/prj-<clean_name>.yml` (sanitizing dots and underscores to hyphens).
-5. **Session Launch**: Executes `mutagen project start` and initial flush. Project immediately registers in `mutagui`.
+### Activation (`prj activate [name]`)
+1. **Context Resolution**: Automatically detects project name from current working directory if omitted.
+2. **Pre-flight**: Verifies Tower SSH reachability (3s timeout).
+3. **Tower Placement**:
+   - If project is in `_archive/`, executes remote move `mv 10_PROJECTS/_archive/<name> 10_PROJECTS/<name>`.
+   - If already active in `10_PROJECTS/`, preserves existing state without error.
+   - If project exists locally on Codex but is absent on Tower, creates remote directory `mkdir -p 10_PROJECTS/<name>` on Tower.
+4. **Local Setup**: Ensures local directory `/home/tau/10_PROJECTS/<name>` exists.
+5. **Declarative Config**: Generates `/home/tau/.config/mutagen/projects/prj-<clean_name>.yml` (sanitizing dots and underscores to hyphens).
+6. **Session Launch**: Executes `mutagen project start` and initial flush. Project immediately registers in `mutagui`.
 
 ### Deactivation (`prj deactivate [name]`)
 1. **Context Resolution**: Automatically detects project name from current working directory if omitted.
