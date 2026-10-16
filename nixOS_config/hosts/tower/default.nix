@@ -60,8 +60,8 @@
   security.polkit.enable = true;
   security.sudo.wheelNeedsPassword = true;
   users.users.tau.openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILKQ22iMgAGp9asehvJgjeK2iG1wUKN0D36S7E4r7H2D tau@codex"
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIkXksgamSnZegcumbYdXfwcjd36h/JmtJjvv7/drZQH tau@slate"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP0YP/FMOt54WpTqdtX3tPGH5mqLUIZ1lELICQEpf57M tau@codex"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKEQ7fhPpYcsefn3G/ohpEzQH9Vg+nepD8nB6g4i3uBZ tau@slate"
   ];
   networking.firewall.allowedTCPPorts = [ 22 ];
 

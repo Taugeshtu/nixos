@@ -59,7 +59,8 @@
   security.polkit.enable = true;
   security.sudo.wheelNeedsPassword = true;
   users.users.tau.openssh.authorizedKeys.keys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIkXksgamSnZegcumbYdXfwcjd36h/JmtJjvv7/drZQH tau@slate"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKEQ7fhPpYcsefn3G/ohpEzQH9Vg+nepD8nB6g4i3uBZ tau@slate"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL3gJE12NzJzJ/asmixzkL0MqVbeJ5+To1SpOUgownO7 tau@tower"
   ];
 
   # --- System Services ---

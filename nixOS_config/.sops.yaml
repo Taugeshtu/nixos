@@ -1,5 +1,5 @@
 keys:
-  - &tau age192vy256uzefv5hs4sluu7kyx373gc60x3xx9hl7rwg9e46a9gvtq8q2kld
+  - &tau age1xj4u52yl2smfpq2seyx00jvdvjnvjglygm2gydm46f6s0u77xylscdc0fn
 creation_rules:
   - path_regex: secrets/.*$
     key_groups:
