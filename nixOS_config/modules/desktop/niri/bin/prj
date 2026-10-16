@@ -7,7 +7,7 @@ TOWER_HOST="Tower"
 MUTAGEN_PROJECTS_DIR="/home/tau/.config/mutagen/projects"
 
 usage() {
-    echo "Usage: prj activate <NAME>"
+    echo "Usage: prj activate [NAME]"
     echo "       prj deactivate [NAME]"
     exit 1
 }
@@ -23,6 +23,14 @@ cmd="${1:-}"
 case "$cmd" in
     activate)
         name="${2:-}"
+        if [ -z "$name" ]; then
+            cwd="$(pwd -P)"
+            if [[ "$cwd" == "$PROJECTS_DIR/"* ]]; then
+                rel="${cwd#"$PROJECTS_DIR/"}"
+                name="${rel%%/*}"
+            fi
+        fi
+
         if [ -z "$name" ] || [ "$name" = "_archive" ] || [[ "$name" == *"/"* ]]; then
             echo "Error: valid project name required for activate." >&2
             exit 1
@@ -42,8 +50,13 @@ case "$cmd" in
             fi
             echo "==> Moving $name out of archive on $TOWER_HOST..."
             ssh "$TOWER_HOST" "mv '$ARCHIVE_DIR/$name' '10_PROJECTS/$name'"
-        elif ! ssh "$TOWER_HOST" "test -d '10_PROJECTS/$name'"; then
-            echo "Error: $name not found in 10_PROJECTS or $ARCHIVE_DIR on $TOWER_HOST" >&2
+        elif ssh "$TOWER_HOST" "test -d '10_PROJECTS/$name'"; then
+            echo "==> Project $name already active on $TOWER_HOST."
+        elif [ -d "$local_path" ]; then
+            echo "==> Project $name is new locally. Creating remote directory on $TOWER_HOST..."
+            ssh "$TOWER_HOST" "mkdir -p '10_PROJECTS/$name'"
+        else
+            echo "Error: $name not found locally in $PROJECTS_DIR or on $TOWER_HOST ($ARCHIVE_DIR or 10_PROJECTS)" >&2
             exit 1
         fi
 
@@ -59,10 +72,14 @@ sync:
     beta: "$TOWER_HOST:10_PROJECTS/$name"
 EOF
 
-        echo "==> Starting Mutagen project $project_name..."
-        mutagen project start -f "$project_yaml"
+        if mutagen sync list "$project_name" >/dev/null 2>&1; then
+            echo "==> Mutagen session $project_name already active."
+        else
+            echo "==> Starting Mutagen project $project_name..."
+            mutagen project start -f "$project_yaml"
+        fi
 
-        echo "==> Flushing initial sync..."
+        echo "==> Flushing sync..."
         mutagen project flush -f "$project_yaml" || true
 
         echo "==> Project $name activated successfully."
