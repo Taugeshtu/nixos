@@ -11,9 +11,10 @@
   # --- Bootloader for BIOS boot on GPT ---
   boot.loader.grub = {
     enable = true;
-    device = "/dev/sda";
     efiSupport = false;
   };
+
+  system.stateVersion = "25.05";
 
   # --- Firewall ---
   networking.firewall = {
