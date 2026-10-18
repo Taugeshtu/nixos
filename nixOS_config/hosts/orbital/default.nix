@@ -1,7 +1,8 @@
-{ config, pkgs, lib, inputs, ... }:
+{ config, pkgs, lib, inputs, modulesPath, ... }:
 
 {
   imports = [
+    (modulesPath + "/profiles/qemu-guest.nix")
     ./disko.nix
     ../../modules/core/base.nix
   ];
@@ -40,6 +41,8 @@
 
   users.users.root.openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP0YP/FMOt54WpTqdtX3tPGH5mqLUIZ1lELICQEpf57M tau@codex"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL3gJE12NzJzJ/asmixzkL0MqVbeJ5+To1SpOUgownO7 tau@tower"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKEQ7fhPpYcsefn3G/ohpEzQH9Vg+nepD8nB6g4i3uBZ tau@slate"
   ];
 
   users.users.tau = {
@@ -115,6 +118,7 @@
   };
 
   # --- Server Memory & Hygiene ---
+  services.qemuGuest.enable = true;
   zramSwap.enable = true;
   boot.tmp.cleanOnBoot = true;
 }
