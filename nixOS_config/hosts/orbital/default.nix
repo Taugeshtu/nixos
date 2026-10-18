@@ -9,6 +9,34 @@
 
   networking.hostName = "orbital";
 
+  # --- Static Networking (Contabo Cloud VPS) ---
+  networking.networkmanager.enable = lib.mkForce false;
+  networking.usePredictableInterfaceNames = false;
+  networking.useDHCP = false;
+  networking.interfaces.eth0 = {
+    ipv4.addresses = [
+      {
+        address = "13.140.157.81";
+        prefixLength = 18;
+      }
+    ];
+    ipv6.addresses = [
+      {
+        address = "2a02:c207:2367:738::1";
+        prefixLength = 64;
+      }
+    ];
+  };
+  networking.defaultGateway = {
+    address = "13.140.128.1";
+    interface = "eth0";
+  };
+  networking.defaultGateway6 = {
+    address = "fe80::1";
+    interface = "eth0";
+  };
+  networking.nameservers = [ "1.1.1.1" "1.0.0.1" "2606:4700:4700::1111" ];
+
   # --- Bootloader for BIOS boot on GPT ---
   boot.loader.grub = {
     enable = true;
