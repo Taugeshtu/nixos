@@ -15,7 +15,7 @@ in
     };
 
     secrets.${hostKeySecret} = {
-      path = "/home/tau/.ssh/${hostKeySecret}";
+      path = "/home/tau/.ssh/id_ed25519";
     };
   };
 }

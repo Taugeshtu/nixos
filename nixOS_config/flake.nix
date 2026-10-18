@@ -84,6 +84,16 @@
         ];
       };
 
+      # Contabo Cloud VPS — Headscale, Caddy, and web services
+      orbital = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          disko.nixosModules.disko
+          ./hosts/orbital/default.nix
+        ];
+      };
+
     };
   };
 }
