@@ -181,6 +181,33 @@
     };
   };
 
+  # --- Reverse SSH Tunnel for Brog to Orbital ---
+  systemd.services.brog-tunnel = {
+    description = "Reverse SSH Tunnel for Brog to Orbital";
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+    wantedBy = [ "multi-user.target" ];
+    unitConfig = {
+      ConditionPathExists = "/home/tau/.ssh/id_ed25519_tunnel";
+    };
+    serviceConfig = {
+      Type = "simple";
+      User = "tau";
+      Group = "users";
+      Restart = "always";
+      RestartSec = "10s";
+      ExecStart = "${pkgs.openssh}/bin/ssh -N -T " + lib.escapeShellArgs [
+        "-o" "ServerAliveInterval=30"
+        "-o" "ServerAliveCountMax=3"
+        "-o" "ExitOnForwardFailure=yes"
+        "-o" "StrictHostKeyChecking=accept-new"
+        "-i" "/home/tau/.ssh/id_ed25519_tunnel"
+        "-R" "127.0.0.1:3000:127.0.0.1:3000"
+        "tau@13.140.157.81"
+      ];
+    };
+  };
+
   # Kiosk greeter config is in ./kiosk.nix
 
   # --- Home Manager Integration ---

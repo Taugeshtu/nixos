@@ -8,10 +8,22 @@
     useRoutingFeatures = "client";
   };
 
-  # Firewall rules for Tailscale overlay
+  # Firewall rules for Tailscale overlay (restricted ports only)
   networking.firewall = {
-    trustedInterfaces = [ "tailscale0" ];
     checkReversePath = "loose"; # Prevents asymmetric routing packet drops
+    interfaces."tailscale0" = {
+      allowedTCPPorts = [
+        22    # SSH & SFTP (Thunar)
+        3000  # Brog web UI
+      ];
+      allowedTCPPortRanges = [
+        { from = 8080; to = 8085; }   # Model serving (llama, ninfer, minicpm)
+        { from = 47984; to = 48010; } # Sunshine / Moonlight streaming
+      ];
+      allowedUDPPortRanges = [
+        { from = 47998; to = 48010; } # Sunshine / Moonlight streaming
+      ];
+    };
   };
 
   # OpenSSH server (accessible only via trustedInterfaces: tailscale0)

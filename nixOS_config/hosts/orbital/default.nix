@@ -50,7 +50,6 @@
     enable = true;
     allowedTCPPorts = [ 22 80 443 ];
     allowedUDPPorts = [ 3478 41641 ];
-    trustedInterfaces = [ "tailscale0" ];
   };
 
   # --- OpenSSH Daemon ---
@@ -75,6 +74,7 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIP0YP/FMOt54WpTqdtX3tPGH5mqLUIZ1lELICQEpf57M tau@codex"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL3gJE12NzJzJ/asmixzkL0MqVbeJ5+To1SpOUgownO7 tau@tower"
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKEQ7fhPpYcsefn3G/ohpEzQH9Vg+nepD8nB6g4i3uBZ tau@slate"
+      ''restrict,port-forwarding,command="/bin/false" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKo9va0kmcOGDZWN9wQdRvFVr4f2cOGONvi7gsC7wwyz brog-tunnel@tower''
     ];
   };
 
@@ -104,6 +104,13 @@
       "orbital.tau.games" = {
         extraConfig = ''
           reverse_proxy 127.0.0.1:8085 {
+            flush_interval -1
+          }
+        '';
+      };
+      "brog.tau.games" = {
+        extraConfig = ''
+          reverse_proxy 127.0.0.1:3000 {
             flush_interval -1
           }
         '';
