@@ -33,6 +33,7 @@ let
   };
 
   currentPkg = inputs.current.packages.${pkgs.system}.default;
+  lspBrokerPkg = inputs.lsp-broker.packages.${pkgs.system}.default;
 in
 {
   nixpkgs.overlays = [
@@ -137,7 +138,7 @@ in
       };
       Service = {
         Type = "simple";
-        ExecStart = "%h/.local/bin/lsp-broker --daemon";
+        ExecStart = "${lspBrokerPkg}/bin/lsp-broker --daemon";
         Restart = "on-failure";
         RestartSec = 2;
       };
@@ -166,6 +167,7 @@ in
     home.packages = with pkgs; [
       todayPkg
       currentPkg
+      lspBrokerPkg
       libinput-gestures
       ydotool
       wtype

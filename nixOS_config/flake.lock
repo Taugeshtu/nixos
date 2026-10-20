@@ -109,6 +109,26 @@
         "type": "github"
       }
     },
+    "lsp-broker": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1792497692,
+        "narHash": "sha256-zh1cav7NIFk0WlC82zcen5zPDfdoeWyTyyFDYGOjm/M=",
+        "owner": "Taugeshtu",
+        "repo": "lsp-broker",
+        "rev": "2f204fcc74bd353d459b6235bd99c97d6350da7c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Taugeshtu",
+        "repo": "lsp-broker",
+        "type": "github"
+      }
+    },
     "my-system": {
       "inputs": {
         "nixpkgs": [
@@ -205,6 +225,7 @@
         "disko": "disko",
         "home-manager": "home-manager",
         "imv-dir-respect": "imv-dir-respect",
+        "lsp-broker": "lsp-broker",
         "my-system": "my-system",
         "ninfer": "ninfer",
         "nixos-hardware": "nixos-hardware",
